@@ -1,1 +1,1 @@
-<view class="content"><image class="logo" src="{{a}}"></image><view class="text-area"><text class="title">{{b}}</text></view></view>
+<view class="home"><home-header u-i="4bf6fb86-0" bind:__l="__l"></home-header><view class="main"><home-overview u-i="4bf6fb86-1" bind:__l="__l"></home-overview><home-teachers u-i="4bf6fb86-2" bind:__l="__l"></home-teachers><home-contact u-i="4bf6fb86-3" bind:__l="__l"></home-contact></view></view>
