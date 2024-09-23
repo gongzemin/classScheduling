@@ -13,13 +13,13 @@
 </template>
 
 <script setup>
-const latitude = 22.599907;
-const longitude = 114.060665;
+const latitude = 22.601266;
+const longitude = 114.059307;
 
 const covers = [
   {
-    latitude: 22.599907,
-    longitude: 114.060665,
+    latitude: 22.601266,
+    longitude: 114.059307,
     iconPath: "../../static/images/location.png",
   },
 ];
