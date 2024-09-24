@@ -94,7 +94,7 @@ const copyWechatId = () => {
 
 .content {
   font-size: 26rpx;
-  color: #007aff;
+  color: #333;
 }
 
 .address {
