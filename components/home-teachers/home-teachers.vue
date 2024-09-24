@@ -99,6 +99,7 @@ const bookCourse = (teacher) => {
   box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2);
   // padding-bottom: 20rpx;
   margin-right: 16rpx; /* Space between cards */
+  margin-bottom: 6rpx; /* Space between cards */
 }
 
 .avatar {

@@ -13,7 +13,7 @@
 
 <style lang="scss">
 .home {
-  background-color: #e7f1fc;
+  background-color: #f0f0f0; //#e7f1fc;
   overflow: hidden;
   .main {
     padding: 20rpx;
