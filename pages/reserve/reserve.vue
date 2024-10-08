@@ -1,10 +1,17 @@
 <template>
   <view>
-    <reserve-calendar></reserve-calendar>
-    <reserve-courses></reserve-courses>
+    <reserve-calendar @day-click="dayClick"></reserve-calendar>
+    <reserve-courses :dayOfTheWeek="dayOfTheWeek"></reserve-courses>
   </view>
 </template>
 
-<script setup></script>
+<script setup>
+import { ref } from "vue";
+const dayOfTheWeek = ref("");
+const dayClick = (val) => {
+  dayOfTheWeek.value = val;
+  console.log("val---", val);
+};
+</script>
 
 <style lang="scss"></style>

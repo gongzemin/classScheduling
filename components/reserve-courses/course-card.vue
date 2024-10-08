@@ -4,9 +4,13 @@
     <view
       class="course-background"
       :style="{ backgroundImage: `url(${teacherImage})` }">
+      <!-- 透明蒙版 -->
+      <view class="overlay"></view>
       <!-- 课程内容 -->
       <view class="course-info">
         <text class="course-name">{{ courseName }}</text>
+        <view class="teacher-name mt-10">{{ teacherName }}</view>
+        <view class="course-time mt-40">时间: {{ courseTime }}</view>
         <view class="course-difficulty">
           <text>难度:</text>
           <view class="stars">
@@ -16,7 +20,6 @@
             </view>
           </view>
         </view>
-        <text class="course-time">时间: {{ courseTime }}</text>
       </view>
       <!-- 学生头像列表 -->
       <view class="student-avatar-list">
@@ -71,18 +74,39 @@ const reserveCourse = () => {
     padding: 10px;
     color: #fff;
 
+    /* 透明蒙版 */
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.4); /* 黑色背景，透明度为 0.4 */
+      z-index: 1;
+    }
+
+    .course-info,
+    .student-avatar-list,
+    .reserve-btn {
+      position: relative;
+      z-index: 2; /* 确保内容在蒙版上方 */
+    }
+
     .course-info {
       // background: rgba(0, 0, 0, 0.5);
       padding: 10px;
       border-radius: 5px;
 
+      .teacher-name {
+        font-size: 16px;
+      }
       .course-name {
         font-size: 18px;
         font-weight: bold;
       }
 
       .course-difficulty {
-        margin-top: 6px;
+        margin-top: 2rpx;
         display: flex;
         align-items: center;
 
@@ -104,21 +128,21 @@ const reserveCourse = () => {
       }
 
       .course-time {
-        margin-top: 4px;
-        font-size: 14px;
+        font-size: 16px;
       }
     }
 
     .student-avatar-list {
       display: flex;
       margin-top: 10px;
+      padding: 0 10px;
       .avatar-wrapper {
-        width: 30px;
-        height: 30px;
+        width: 22px;
+        height: 22px;
         border-radius: 50%;
         overflow: hidden;
         margin-right: 5px;
-        border: 2px solid #fff;
+        border: 0.5px solid rgba(255, 255, 255, 0.3);
 
         .avatar {
           width: 100%;
@@ -129,16 +153,17 @@ const reserveCourse = () => {
     }
 
     .reserve-btn {
+      position: absolute;
+      right: 25rpx;
+      top: 50%;
+      transform: translateY(-50%);
       background-color: #ff6600;
       border: none;
       color: #fff;
       font-size: 16px;
       text-align: center;
       border-radius: 5px;
-      margin-top: 10px;
-      position: absolute;
-      right: 20rpx;
-      bottom: 30%;
+      z-index: 2; /* 确保按钮在蒙版上方 */
     }
   }
 }
