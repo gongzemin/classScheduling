@@ -31,7 +31,7 @@
         </view>
       </view>
       <!-- 预约按钮 -->
-      <button class="reserve-btn" @click="reserveCourse">预约课程</button>
+      <button class="reserve-btn" @click="bookCourse">预约课程</button>
     </view>
   </view>
 </template>
@@ -46,7 +46,8 @@ const props = defineProps({
   students: Array, // 学生 avatar 列表
 });
 
-const reserveCourse = () => {
+const bookCourse = async (props) => {
+  // const { success } = await cloud.callFunction('bookCourse', { userId, courseId: co})
   uni.showToast({
     title: "已预约",
     icon: "success",

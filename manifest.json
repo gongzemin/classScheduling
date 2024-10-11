@@ -50,7 +50,7 @@
   "quickapp": {},
   /* 小程序特有相关 */
   "mp-weixin": {
-    "appid": "wx92c230ef2cba6329",
+    "appid": "wxd01f89eda8c5588e",
     "setting": {
       "urlCheck": false
     },
@@ -68,5 +68,10 @@
   "uniStatistics": {
     "enable": false
   },
-  "vueVersion": "3"
+  "vueVersion": "3",
+  "uniCloud": {
+    "provider": "aliyun", // 使用阿里云
+    "spaceId": "mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78", // 替换为你的云空间 ID
+    "clientSecret": "https://file-unigkiszew-mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78.oss-cn-zhangjiakou.aliyuncs.com" // 替换为你的客户端密钥
+  }
 }
