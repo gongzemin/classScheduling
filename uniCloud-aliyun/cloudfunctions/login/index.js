@@ -5,7 +5,7 @@ exports.main = async (event, context) => {
   const { code } = event;
 
   const appId = "wxd01f89eda8c5588e";
-  const appSecret = "2aa1d0442454a81bc0a7afdd660a78cf";
+  const appSecret = "";
   try {
     const response = await axios.get(
       `https://api.weixin.qq.com/sns/jscode2session`,
