@@ -9,15 +9,19 @@
           @chooseavatar="onChooseAvatar">
           <image class="avatar" :src="avatarUrl" mode="aspectFill" />
         </button>
-        <input
-          v-model="nickname"
-          class="weui-input"
-          type="nickname"
-          placeholder="请输入昵称" />
+        <view class="flex flex-col">
+          <button v-if="!isLoggedIn" class="login-btn" @click="handleLogin">
+            登录/注册
+          </button>
+          <input
+            v-else
+            v-model="nickname"
+            class="weui-input mb-5"
+            type="nickname"
+            placeholder="请输入昵称" />
+          <view v-if="isLoggedIn">{{ userInfo.mobile }}</view>
+        </view>
       </view>
-      <button v-if="!isLoggedIn" class="login-btn" @click="handleLogin">
-        登录/注册
-      </button>
     </view>
 
     <!-- 功能卡片 -->
@@ -35,12 +39,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
 // 用户信息
 const avatarUrl = ref("/static/images/defaultAvatar.jpeg"); // 默认头像
 const nickname = ref("未登录"); // 用户昵称
+// 登录状态
+const isLoggedIn = ref(false);
+const userInfo = reactive({
+  mobile: "",
+});
 
 // 获取微信头像
 const onChooseAvatar = (e: any) => {
@@ -63,9 +72,6 @@ const menuItems = ref([
   { label: "意见反馈", path: "feedback", icon: "mail-open" },
 ]);
 
-// 登录状态
-const isLoggedIn = ref(false);
-
 // 路由跳转
 const router = useRouter();
 
@@ -80,6 +86,15 @@ const handleLogin = () => {
   });
   console.log("用户昵称:", nickname.value);
 };
+
+onMounted(() => {
+  const storedUserInfo = uni.getStorageSync("userInfo");
+  if (storedUserInfo && storedUserInfo.mobile) {
+    userInfo.mobile = storedUserInfo.mobile; // 直接更新 mobile 字段
+    isLoggedIn.value = true;
+    nickname.value = "请输入昵称";
+  }
+});
 </script>
 
 <style>

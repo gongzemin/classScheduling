@@ -27,11 +27,40 @@
       }
     },
     {
-    	"path" : "pages/login/login",
-    	"style" : 
-    	{
-    		"navigationBarTitleText" : ""
-    	}
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": ""
+      }
+    }
+  ],
+  "subPackages": [
+    {
+      "root": "pages-courses",
+      "pages": [
+        {
+          "path": "newCourse/newCourse",
+          "style": {
+            "navigationBarTitleText": "新建课程"
+          }
+        },
+        {
+          "path": "courseList/courseList",
+          "style": {
+            "navigationBarTitleText": "课程列表"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages-me-reserve",
+      "pages": [
+        {
+          "path": "reserveList/reserveList",
+          "style": {
+            "navigationBarTitleText": "我的预约"
+          }
+        }
+      ]
     }
   ],
   "globalStyle": {
