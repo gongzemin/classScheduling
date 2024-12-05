@@ -64,63 +64,6 @@ const getPhoneNumber = async (val) => {
   }
 };
 
-const getPhoneNumber1 = async (val) => {
-  const appid = "wxdc6f7096d4b98844";
-  const secret = "41ecdc5121b607b54ad31c1a5b3e7730";
-
-  // 获取 access_token
-  const { data: tokenData } = await uni.request({
-    url: `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appid}&secret=${secret}`,
-    method: "GET",
-  });
-
-  const access_token = tokenData?.access_token;
-  token.value = access_token;
-  if (!access_token) {
-    console.error("Failed to fetch access_token.");
-    return;
-  }
-  uni.showToast({
-    icon: "success",
-    duration: 800,
-    title: "授权成功",
-  });
-
-  uni.showLoading({
-    title: "获取手机号码...",
-    mask: true,
-  });
-  // 获取手机号
-  const { data: phoneData } = await uni.request({
-    url: `https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${access_token}`,
-    method: "POST",
-    data: {
-      code: val.detail.code,
-    },
-  });
-  uni.hideLoading();
-  code.value = phoneData;
-
-  if (phoneData.errcode === 0 && phoneData.phone_info?.phoneNumber) {
-    const mobile = phoneData.phone_info.phoneNumber;
-    db.collection("users").add({
-      mobile,
-    });
-    uni.setStorageSync("userInfo", {
-      mobile,
-    });
-    console.log("User's phone number:", mobile);
-    uni.switchTab({
-      url: "/pages/me/me",
-    });
-  } else {
-    console.error(
-      "Failed to fetch phone number:",
-      phoneData.errmsg || "Unknown error"
-    );
-  }
-};
-
 // 取消按钮逻辑
 const onCancel = () => {
   console.log("取消登录");

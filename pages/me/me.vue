@@ -63,6 +63,11 @@ const menuItems = ref([
   { label: "上课记录", path: "course-records", icon: "info" },
   { label: "会员卡", path: "membership-cards", icon: "wallet" },
   {
+    label: "课程表",
+    path: "/pages-courses/newCourse/newCourse",
+    icon: "wallet",
+  },
+  {
     label: "联系客服",
     path: "",
     icon: "chat",
@@ -76,7 +81,9 @@ const menuItems = ref([
 const router = useRouter();
 
 const navigateTo = (path: string) => {
-  router.push({ path });
+  uni.navigateTo({
+    url: path,
+  });
 };
 
 // 模拟登录

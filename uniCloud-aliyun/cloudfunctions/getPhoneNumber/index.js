@@ -4,7 +4,7 @@ exports.main = async (event, context) => {
   //event为客户端上传的参数
   const { code } = event; // 从前端传来的code
   const appid = "wxdc6f7096d4b98844"; // 替换为你的小程序 AppID
-  const secret = "41ecdc5121b607b54ad31c1a5b3e7730"; // 替换为你的 AppSecret
+  const secret = "199bb71d4ca47170bf6e7c7d2a42386e"; // 替换为你的 AppSecret
 
   try {
     // 1. 获取 access_token
@@ -25,7 +25,6 @@ exports.main = async (event, context) => {
       { code }
     );
 
-    
     if (phoneRes.data.errcode === 0 && phoneRes.data.phone_info) {
       return {
         success: true,

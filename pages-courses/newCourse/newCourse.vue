@@ -1,209 +1,385 @@
 <template>
   <view class="form-container">
-    <text class="form-title">新建课程</text>
+    <view class="form-title">新建课程</view>
 
-    <!-- 星期几选择 -->
-    <view class="form-item">
-      <text class="form-label">选择周几</text>
-      <picker mode="multiSelector" :range="weekdays" @change="onWeekdaysChange">
-        <view class="form-input">
-          {{
-            selectedWeekdays.length > 0
-              ? selectedWeekdays.join("、")
-              : "请选择星期几（必填）"
-          }}
-        </view>
-      </picker>
-    </view>
+    <uni-forms
+      :modelValue="formData"
+      ref="formRef"
+      :rules="rules"
+      @submit="submitForm"
+      label-position="top"
+      label-width="100">
+      <!-- 星期几选择 -->
+      <uni-forms-item name="day" label="请选择周几" required>
+        <picker
+          @change="onDayChange"
+          :value="dayIndex"
+          :range="dayList"
+          range-key="text">
+          <view class="form-input">{{ formData.day }}</view>
+        </picker>
+      </uni-forms-item>
 
-    <!-- 时间选择 -->
-    <view class="form-item">
-      <text class="form-label">开始时间</text>
-      <picker mode="time" @change="onTimeChange('start')">
-        <view class="form-input">
-          {{ timeRange.start || "请选择开始时间（必填）" }}
-        </view>
-      </picker>
-    </view>
-    <view class="form-item">
-      <text class="form-label">结束时间</text>
-      <picker mode="time" @change="onTimeChange('end')">
-        <view class="form-input">
-          {{ timeRange.end || "请选择结束时间（必填）" }}
-        </view>
-      </picker>
-    </view>
+      <!-- 时间选择 -->
+      <uni-forms-item name="startTime" label="请选择课程开始时间" required>
+        <picker
+          mode="time"
+          :value="formData.startTime"
+          start="00:00"
+          end="24:00"
+          @change="($event) => onTimeChange($event, 'start')">
+          <view class="form-input">
+            {{ formData.startTime }}
+          </view>
+        </picker>
+      </uni-forms-item>
+      <uni-forms-item name="endTime" label="请选择课程结束时间" required>
+        <picker
+          mode="time"
+          :value="formData.endTime"
+          @change="($event) => onTimeChange($event, 'end')">
+          <view class="form-input">
+            {{ formData.endTime }}
+          </view>
+        </picker>
+      </uni-forms-item>
 
-    <!-- 课程列表选择 -->
-    <view class="form-item">
-      <text class="form-label">课程列表</text>
-      <picker mode="selector" :range="courseTypes" @change="onCourseTypeChange">
-        <view class="form-input">
-          {{ selectedCourseType || "请选择课程种类（必填）" }}
-        </view>
-      </picker>
-    </view>
+      <!-- 课程种类选择 -->
+      <uni-forms-item name="courseType" label="请选择课程种类" required>
+        <picker
+          mode="selector"
+          :range="courseTypes"
+          @change="onCourseTypeChange"
+          range-key="text">
+          <view class="form-input">
+            {{ formData.courseType }}
+          </view>
+        </picker>
+      </uni-forms-item>
 
-    <!-- 课程名称 -->
-    <view v-if="!selectedCourseType" class="form-item">
-      <text class="form-label">课程名称</text>
-      <input
-        class="form-input"
-        placeholder="请输入课程名称（必填）"
-        v-model="courseName" />
-    </view>
+      <!-- 课程难度 -->
+      <uni-forms-item
+        class="form-item"
+        name="courseLevel"
+        label="请选择课程难度"
+        required>
+        <picker
+          mode="selector"
+          :range="courseLevels"
+          @change="onCourseLevelChange"
+          range-key="text">
+          <view class="form-input">
+            {{ formData.courseLevel }}
+          </view>
+        </picker>
+      </uni-forms-item>
 
-    <!-- 课程老师 -->
-    <!-- 课程老师选择 -->
-    <view class="form-item">
-      <text class="form-label">课程老师</text>
-      <picker
-        mode="selector"
-        :range="teachers.map((t) => t.name)"
-        @change="onTeacherChange">
-        <view class="form-input">
-          {{ selectedTeacher?.name || "请选择课程老师" }}
-        </view>
-      </picker>
-    </view>
-    <view v-if="selectedTeacher" class="teacher-preview">
-      <image :src="selectedTeacher.image" class="teacher-image" />
-    </view>
+      <!-- 单选框组：选择已有老师 or 新增老师 -->
+      <uni-forms-item name="teacherOption" label="上课老师选项" required>
+        <radio-group
+          :value="formData.teacherOption"
+          @change="onTeacherOptionChange">
+          <label class="radio-label mr-10">
+            <radio value="existing" />
+            选择已有的老师
+          </label>
+          <label class="radio-label">
+            <radio value="new" />
+            新增上课老师
+          </label>
+        </radio-group>
+      </uni-forms-item>
 
-    <view v-if="!selectedCourseType" class="form-item">
-      <text class="form-label">课程老师</text>
-      <input
-        class="form-input"
-        placeholder="请输入课程老师名称（必填）"
-        v-model="teacherName" />
-    </view>
-
-    <!-- 课程老师图片上传 -->
-    <view class="form-item">
-      <text class="form-label">课程老师图片</text>
-      <button @click="uploadImage" class="upload-btn">上传图片</button>
-      <view v-if="uploadedImage" class="teacher-preview">
-        <image :src="uploadedImage" class="teacher-image" />
+      <!-- 课程老师选择 如果老师不在列表中 请在下面的表单中输入老师信息 -->
+      <uni-forms-item
+        v-if="formData.teacherOption === 'existing'"
+        name="teacher"
+        label="请选择上课老师">
+        <picker
+          mode="selector"
+          :range="teachers.map((t) => t.name)"
+          @change="onTeacherChange">
+          <view class="form-input">
+            {{ formData.selectedTeacherName }}
+          </view>
+        </picker>
+      </uni-forms-item>
+      <view v-if="formData.selectedTeacherName" class="teacher-preview">
+        <image
+          :src="
+            formData.selectedTeacherIndex &&
+            teachers[formData.selectedTeacherIndex].courseTeacherPic
+          "
+          class="teacher-image" />
       </view>
-    </view>
 
-    <!-- 课程难度 -->
-    <view class="form-item">
-      <text class="form-label">课程难度</text>
-      <picker
-        mode="selector"
-        :range="difficultyLevels"
-        @change="onDifficultyChange">
-        <view class="form-input">
-          {{ selectedDifficulty || "请选择课程难度（必填）" }}
-        </view>
-      </picker>
-    </view>
+      <uni-forms-item
+        class="form-item"
+        name="courseLevel"
+        label="请输入上课老师名称"
+        v-if="formData.teacherOption === 'new'">
+        <input class="form-input" v-model="formData.courseTeacherName" />
+      </uni-forms-item>
 
-    <!-- 操作按钮 -->
-    <view class="form-buttons">
-      <button class="submit-btn" @click="submitForm">提交</button>
-      <button class="cancel-btn" @click="cancelForm">取消</button>
-    </view>
+      <!-- 课程老师图片上传 -->
+      <uni-forms-item
+        class="form-item"
+        name="courseLevel"
+        label="请上传老师图片"
+        v-if="formData.teacherOption === 'new'">
+        <uni-file-picker
+          fileMediatype="image"
+          :limit="1"
+          @success="onImageUploadSuccess"></uni-file-picker>
+        <!--    <button @click="uploadImage" class="upload-btn">上传图片</button> -->
+        <!--    <view class="teacher-preview" v-if="formData.courseTeacherPic">
+          <image :src="formData.courseTeacherPic" class="teacher-image" />
+        </view> -->
+      </uni-forms-item>
+
+      <!-- 操作按钮 -->
+      <view class="form-buttons">
+        <button class="cancel-btn" @click="cancelForm">取消</button>
+        <button class="submit-btn" @click="submitForm">提交</button>
+      </view>
+    </uni-forms>
   </view>
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { ref, reactive } from "vue";
+import { onReady } from "@dcloudio/uni-app";
 
-const courseTypes = ref([
-  "Kpop入门",
-  "Kpop",
-  "Hiphop入门",
-  "Hiphop基础",
-  "Hiphop进阶",
-  "Jazz入门",
-  "Jazz基础",
-  "Jazz进阶",
-]);
-
+const db = uniCloud.database();
 interface Teacher {
   name: string;
-  image: string;
+  courseTeacherPic: string;
 }
 
-const teachers = ref<Teacher[]>([
-  { name: "张老师", image: "/static/teacher1.png" },
-  { name: "李老师", image: "/static/teacher2.png" },
+onReady(() => {
+  // 设置自定义表单校验规则，必须在节点渲染完毕后执行
+  if (formRef.value) {
+    formRef.value.setRules(rules);
+  } else {
+    console.error("formRef 未正确绑定");
+  }
+});
+
+const formData = reactive({
+  day: null,
+  startTime: null,
+  endTime: null,
+  courseType: "",
+  courseLevel: "",
+  teacherOption: "", // 默认选项为已有老师
+  selectedTeacherName: "",
+  selectedTeacherIndex: null,
+  courseTeacherName: "",
+  courseTeacherPic: "",
+});
+const formRef = ref(null);
+const teachers = ref<Teacher[]>([]);
+
+const rules = {
+  day: {
+    rules: [{ required: true, errorMessage: "请选择星期几" }],
+  },
+  startTime: {
+    rules: [{ required: true, errorMessage: "请选择开始时间" }],
+  },
+  endTime: {
+    rules: [{ required: true, errorMessage: "请选择结束时间" }],
+  },
+  courseType: {
+    rules: [{ required: true, errorMessage: "请选择课程种类" }],
+  },
+  courseLevel: {
+    rules: [{ required: true, errorMessage: "请选择课程种类" }],
+  },
+  teacherOption: {
+    rules: [{ required: true, errorMessage: "请选择上课老师选项" }],
+  },
+};
+
+const dayList = ref([
+  { value: "周一", text: "周一" },
+  { value: "周二", text: "周二" },
+  { value: "周三", text: "周三" },
+  { value: "周四", text: "周四" },
+  { value: "周五", text: "周五" },
+  { value: "周六", text: "周六" },
+  { value: "周日", text: "周日" },
+]);
+const courseTypes = ref([
+  { value: "Kpop", text: "Kpop" },
+  { value: "Hiphop", text: "Hiphop" },
+  { value: "Jazz", text: "Jazz" },
+  { value: "编舞", text: "编舞" },
+]);
+const courseLevels = ref([
+  { value: "入门", text: "入门" },
+  { value: "基础", text: "基础" },
+  { value: "进阶", text: "进阶" },
 ]);
 
-const weekdays = ref(["周一", "周二", "周三", "周四", "周五", "周六", "周日"]);
-const difficultyLevels = ref(["0星", "1星", "2星", "3星"]);
 const selectedTeacher = ref<Teacher | null>(null);
-const selectedCourseType = ref<string>("");
-const courseName = ref<string>("");
-const teacherName = ref<string>("");
-const uploadedImage = ref<string>("");
-const selectedWeekdays = ref<string[]>([]);
 const timeRange = ref<{ start: string; end: string }>({ start: "", end: "" });
-const selectedDifficulty = ref<string>("");
+const dayIndex = ref(0); // 默认选中第一个，可改为 -1 表示未选中
 
-// 方法
-const onTeacherChange = (e: any) => {
-  selectedTeacher.value = teachers.value[e.detail.value];
+const onDayChange = (e) => {
+  const index = e.detail.value;
+  formData.day = dayList.value[index].text; // 根据索引获取对应的 `text`
+  dayIndex.value = index; // 更新当前索引
 };
 
+const onTeacherOptionChange = (e) => {
+  formData.teacherOption = e.detail.value; // 获取选中的值
+  formData.selectedTeacherIndex = null;
+  formData.courseTeacherName = "";
+  formData.courseTeacherPic = "";
+  formData.selectedTeacherName = "";
+};
+
+// 选择教师
+const onTeacherChange = (event: any) => {
+  const index = event.detail.value; // 获取选中索引
+  formData.selectedTeacherName = teachers.value[index].name;
+  formData.selectedTeacherIndex = index;
+};
+// 课程种类
 const onCourseTypeChange = (e: any) => {
-  selectedCourseType.value = courseTypes.value[e.detail.value];
+  const index = e.detail.value;
+  formData.courseType = courseTypes.value[index].text; // 根据索引获取对应的 `text`
+};
+// 课程难度
+const onCourseLevelChange = (e: any) => {
+  const index = e.detail.value;
+  formData.courseLevel = courseLevels.value[index].text; // 根据索引获取对应的 `text`
 };
 
-const onWeekdaysChange = (e: any) => {
-  selectedWeekdays.value = e.detail.value.map(
-    (index: number) => weekdays.value[index]
-  );
+// 处理图片上传
+const onImageUploadSuccess = (res) => {
+  // res.file.url 是上传成功后的云存储地址
+  formData.courseTeacherPic = res.tempFilePaths[0];
+  console.log("Uploaded image URL: ", res);
 };
 
-const onTimeChange = (type: "start" | "end") => (e: any) => {
-  timeRange.value[type] = e.detail.value;
-};
+const getTimestamp = (value) => {
+  const [hours, minutes] = value.split(":").map(Number);
 
-const onDifficultyChange = (e: any) => {
-  selectedDifficulty.value = difficultyLevels.value[e.detail.value];
+  // 将时间字符串转换为当日的时间戳
+  const currentDate = new Date();
+  const timestamp = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth(),
+    currentDate.getDate(),
+    hours,
+    minutes,
+    0,
+    0
+  ).getTime();
+  return timestamp;
+};
+const onTimeChange = (event: any, type: "start" | "end") => {
+  const value = event.detail.value; // 获取选中的时间字符串，如 "10:00"
+  if (!value) return; // 防止无效输入
+  // 更新表单数据
+  if (type === "start") {
+    formData.startTime = value; // 存储为时间戳
+  } else if (type === "end") {
+    formData.endTime = value; // 另一种时间
+  }
 };
 
 const uploadImage = () => {
   uni.chooseImage({
     count: 1,
+    sizeType: ["original"],
     success: (res) => {
-      uploadedImage.value = res.tempFilePaths[0];
+      formData.courseTeacherPic = res.tempFilePaths[0];
     },
   });
 };
 
+db.collection("teachers")
+  .get()
+  .then((res) => {
+    console.log("teachers", res);
+    if (res.result?.errCode === 0) {
+      teachers.value = res.result.data;
+    }
+  });
+
+const resetForm = () => {
+  formData.day = "";
+  formData.startTime = "";
+  formData.endTime = "";
+  formData.courseType = "";
+  formData.courseLevel = "";
+  formData.selectedTeacherName = "";
+  formData.courseTeacherName = "";
+  formData.courseTeacherPic = "";
+  formData.teacherOption = "";
+};
+
 const submitForm = () => {
-  if (
-    (!selectedCourseType.value && (!courseName.value || !teacherName.value)) ||
-    selectedWeekdays.value.length === 0 ||
-    !timeRange.value.start ||
-    !timeRange.value.end ||
-    !selectedDifficulty.value
-  ) {
-    uni.showToast({
-      title: "请填写完整信息！",
-      icon: "none",
+  formRef.value
+    .validate()
+    .then(async (res) => {
+      console.log("success", res);
+      if (!formData.selectedTeacherName) {
+        // 如果没有选择教师，检查名称和图片是否已填写
+        if (!formData.courseTeacherName || !formData.courseTeacherPic) {
+          uni.showToast({
+            title: `请完善教师信息`,
+            icon: "none", // 使用更清晰的提示样式
+          });
+          return; // 提前终止流程
+        }
+      }
+
+      const collection = db.collection("class-schedule"); // 替换为你的云数据库集合名称
+
+      const dataToSave = {
+        day: formData.day,
+        startTime: getTimestamp(formData.startTime),
+        endTime: getTimestamp(formData.endTime),
+        courseType: formData.courseType,
+        courseLevel: formData.courseLevel,
+        courseTeacherName:
+          formData.selectedTeacherName || formData.courseTeacherName, // 如果未选择下拉框中的教师，使用手动输入的教师名
+        courseTeacherPic: formData.selectedTeacherName
+          ? teachers[formData.selectedTeacherIndex].courseTeacherPic
+          : formData.courseTeacherPic, // 教师图片
+      };
+
+      const result = await collection.add(dataToSave);
+
+      if (!formData.selectedTeacherName) {
+        const collectionTeacher = db.collection("teachers"); // 替换为你的云数据库集合名称
+        const resu = await collectionTeacher.add({
+          name: formData.courseTeacherName,
+          courseTeacherPic: formData.courseTeacherPic,
+        });
+        console.log("resu", resu);
+      }
+      console.log("保存成功", result);
+
+      uni.showToast({
+        title: "提交成功",
+        icon: "success",
+      });
+
+      // 清空表单数据
+      resetForm();
+    })
+    .catch((err) => {
+      console.error("提交失败", err);
+      uni.showToast({
+        title: "提交失败，请重试",
+        icon: "none",
+      });
     });
-    return;
-  }
-
-  console.log("提交数据", {
-    courseType: selectedCourseType.value,
-    courseName: courseName.value,
-    teacherName: teacherName.value,
-    uploadedImage: uploadedImage.value,
-    weekdays: selectedWeekdays.value,
-    timeRange: timeRange.value,
-    difficulty: selectedDifficulty.value,
-  });
-
-  uni.showToast({
-    title: "提交成功！",
-    icon: "success",
-  });
 };
 
 const cancelForm = () => {
@@ -211,80 +387,91 @@ const cancelForm = () => {
 };
 </script>
 
-<style scoped>
+<style>
+.uni-select {
+  background-color: #fff;
+}
+.uni-forms-item {
+  margin-bottom: 0px;
+}
+</style>
+<style scoped lang="scss">
 .form-container {
   padding: 20px;
   background: #f9f9f9;
   border-radius: 8px;
-}
 
-.form-title {
-  font-size: 22px;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 24px;
-}
+  .form-title {
+    font-size: 22px;
+    font-weight: bold;
+    text-align: left;
+    margin-bottom: 35rpx;
+  }
 
-.form-item {
-  margin-bottom: 16px;
-}
+  .form-item {
+    margin-bottom: 16px;
+  }
 
-.form-label {
-  display: block;
-  font-size: 14px;
-  color: #333;
-  margin-bottom: 8px;
-}
+  .form-label {
+    display: block;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 8px;
+  }
 
-.form-input {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: #fff;
-}
+  .form-input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    height: 35rpx;
+  }
 
-.teacher-preview {
-  margin-top: 8px;
-}
+  .teacher-preview {
+    margin-top: 8px;
+  }
 
-.teacher-image {
-  width: 100px;
-  height: 100px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-}
+  .teacher-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+  }
 
-.upload-btn {
-  padding: 6px 12px;
-  background: #007aff;
-  color: #fff;
-  border-radius: 4px;
-  text-align: center;
-  font-size: 12px;
-}
+  // .upload-btn {
+  //   padding: 6px 12px;
+  //   background: #007aff;
+  //   color: #fff;
+  //   border-radius: 4px;
+  //   text-align: center;
+  //   font-size: 12px;
+  // }
 
-.form-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 24px;
-}
+  .form-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+  }
+  .mr-10 {
+    margin-right: 10px;
+  }
 
-.submit-btn,
-.cancel-btn {
-  flex: 1;
-  padding: 14px;
-  margin: 0 8px;
-  font-size: 16px;
-  border-radius: 4px;
-}
+  .submit-btn,
+  .cancel-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 4px;
+  }
 
-.submit-btn {
-  background: #28a745;
-  color: white;
-}
+  .submit-btn {
+    background: #007aff;
+    color: white;
+  }
 
-.cancel-btn {
-  background: #dc3545;
-  color: white;
+  .cancel-btn {
+    margin-right: 20px;
+  }
 }
 </style>

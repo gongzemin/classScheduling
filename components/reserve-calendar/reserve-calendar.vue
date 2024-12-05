@@ -104,7 +104,7 @@ const getWeekdayLabel = (date: Date): string => {
 
   if (diffInMs === 0) return "今天";
   if (diffInMs === 1) return "明天";
-  if (diffInMs === 2) return "后天";
+  // if (diffInMs === 2) return "后天";
 
   return getWeekday(date); // 如果不是今天、明天或后天，则返回周几
 };
@@ -126,6 +126,7 @@ const getWeekday = (date: Date): string => {
 const handleDayClick = (date: Date) => {
   const weekday = getWeekday(date); // 获取点击的日期对应的周几
   selectedDay.value = date; // 更新选中的日期
+  console.log("weekday", weekday);
   emits("dayClick", weekday); // 仅传递周几作为事件参数
 };
 

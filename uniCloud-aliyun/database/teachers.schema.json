@@ -1,0 +1,49 @@
+{
+  "bsonType": "object",
+  "required": [],
+  "permission": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "properties": {
+    "_id": { "description": "ID，系统自动生成" },
+    "name": {
+      "bsonType": "string",
+      "title": "名称",
+      "description": "用户名，不允许重复",
+      "trim": "both"
+    },
+    "avatar": {
+      "bsonType": "string",
+      "title": "头像",
+      "description": "头像",
+      "trim": "both"
+    },
+    "courseTeacherPic": {
+      "bsonType": "string",
+      "title": "课程卡片背景图片",
+      "description": "课程卡片背景图片",
+      "trim": "both"
+    },
+    "teachCount": {
+      "bsonType": "number",
+      "title": "教课次数",
+      "description": "教课次数",
+      "trim": "both"
+    },
+    "create_date": {
+      "bsonType": "timestamp",
+      "defaultValue": {
+        "$env": "now"
+      }
+    },
+    "update_date": {
+      "bsonType": "timestamp",
+      "defaultValue": {
+        "$env": "now"
+      }
+    }
+  }
+}
