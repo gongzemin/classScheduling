@@ -1,22 +1,11 @@
 <template>
-	<view>
-		
-	</view>
+  <view class="p-20">
+    <reserve />
+  </view>
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				
-			}
-		},
-		methods: {
-			
-		}
-	}
+<script setup>
+import reserve from "../../pages/reserve/reserve.vue";
 </script>
 
-<style>
-
-</style>
+<style scoped></style>

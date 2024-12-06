@@ -42,6 +42,7 @@
 import { ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
+const db = uniCloud.database();
 // 用户信息
 const avatarUrl = ref("/static/images/defaultAvatar.jpeg"); // 默认头像
 const nickname = ref("未登录"); // 用户昵称
@@ -55,6 +56,13 @@ const userInfo = reactive({
 const onChooseAvatar = (e: any) => {
   // 获取选中的头像
   avatarUrl.value = e.detail.avatarUrl;
+  db.collection("users")
+    .add({
+      avatar: "avatarUrl.value",
+    })
+    .then((res) => {
+      console.log("res", res);
+    });
   console.log("选择的头像:", avatarUrl.value, e);
 };
 
@@ -64,7 +72,7 @@ const menuItems = ref([
   { label: "会员卡", path: "membership-cards", icon: "wallet" },
   {
     label: "课程表",
-    path: "/pages-courses/newCourse/newCourse",
+    path: "/pages-courses/courseList/courseList",
     icon: "wallet",
   },
   {

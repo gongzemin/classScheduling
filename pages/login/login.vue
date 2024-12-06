@@ -2,9 +2,8 @@
   <view class="login-page">
     <!-- Logo -->
     <image class="logo" src="/static/logoCircle.png" />
-    手机号{{ mobile }}
     <!-- 公司名称 -->
-    <view class="company-name">摘星科技有限公司</view>
+    <view class="company-name">Pick Star 娱乐有限公司</view>
 
     <!-- 按钮区域 -->
     <view class="button-group">
@@ -29,17 +28,7 @@ import { ref, reactive, onMounted } from "vue";
 const db = uniCloud.database();
 // const router = useRouter();
 const mobile = ref(null);
-
 const userInfo = uni.getStorageSync("userInfo");
-
-if (userInfo && userInfo.mobile1) {
-  // 如果本地缓存中有手机号，跳转到 "我的" 页面
-  uni.switchTab({
-    url: "/pages/me/me",
-  });
-} else {
-  // getToken();
-}
 
 const getPhoneNumber = async (val) => {
   const { result } = await uniCloud.callFunction({
@@ -52,11 +41,26 @@ const getPhoneNumber = async (val) => {
 
   if (result.success) {
     const mobile = result.phoneNumber;
-    // 将手机号存储到数据库和本地缓存
-    db.collection("users").add({ mobile });
-    uni.setStorageSync("userInfo", { mobile });
 
-    uni.showToast({ title: "授权成功", icon: "success" });
+    // 查询 users 数据表中是否已存在该手机号
+    const { result: queryResult } = await db
+      .collection("users")
+      .where({ mobile })
+      .field("mobile")
+      .get();
+    console.log("queryResult", queryResult);
+    if (queryResult.data.length > 0) {
+      // 手机号已存在，直接提示用户
+      uni.setStorageSync("userInfo", { mobile });
+      uni.showToast({ title: "手机号已授权", icon: "success" });
+    } else {
+      // 手机号不存在，添加到数据库并存储到本地缓存
+      await db.collection("users").add({ mobile });
+      uni.setStorageSync("userInfo", { mobile });
+      uni.showToast({ title: "授权成功", icon: "success" });
+    }
+
+    // 跳转到用户中心页面
     uni.switchTab({ url: "/pages/me/me" });
   } else {
     uni.showToast({ title: "获取手机号失败", icon: "none" });

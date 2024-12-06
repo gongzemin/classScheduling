@@ -5,8 +5,9 @@
       :key="index"
       class="course-wrapper">
       <course-card
-        :courseName="course.courseType"
+        :courseName="`${course.courseType}${course.courseLevel}`"
         :teacherName="course.courseTeacherName"
+        :courseLevel="course.courseLevel"
         :courseTime="course.time"
         :difficulty="course.difficulty"
         :teacherImage="course.courseTeacherPic"
@@ -18,6 +19,7 @@
 <script setup>
 import { onMounted, ref, watch } from "vue";
 import courseCard from "./course-card.vue";
+import { formatTimestampToHHMM } from "../../common/util";
 const props = defineProps({
   dayOfTheWeek: String,
 });
@@ -109,7 +111,14 @@ const updateDayCourses = async (dayOfWeek) => {
   }
   console.log("courses.value", courseList.value);
 
-  dayCourses.value = filterCoursesByDay(targetDay);
+  let course = filterCoursesByDay(targetDay);
+  course.forEach((item) => {
+    const formattedStartTime = formatTimestampToHHMM(item.startTime);
+    const formattedEndTime = formatTimestampToHHMM(item.endTime);
+    item.time = `${formattedStartTime}-${formattedEndTime}`;
+  });
+  console.log("courseList1", course);
+  dayCourses.value = course;
   console.log("Filtered day courses:", dayCourses.value);
 };
 // 监听 props 的 dayOfTheWeek 变化

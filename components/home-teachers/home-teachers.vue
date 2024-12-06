@@ -1,11 +1,11 @@
 <template>
   <view class="scroll-container">
-    <Title content="教师团队 (10)"></Title>
+    <Title :content="`教师团队(${count})`"></Title>
     <scroll-view scroll-x="true" show-scrollbar="false" class="scroll-view">
       <view v-for="(teacher, index) in teachers" :key="index" class="card">
         <image
           class="avatar"
-          :src="teacher.avatar"
+          :src="teacher.courseTeacherPic"
           mode="aspectFill"
           @click="viewDetails(teacher)"></image>
         <view class="info">
@@ -24,45 +24,19 @@
 import { ref } from "vue";
 import Title from "../Title.vue";
 
-const teachers = ref([
-  {
-    name: "魅力",
-    description: "kPop",
-    avatar:
-      "https://mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78.cdn.bspapp.com/teachers/IMG_0941.jpg",
-  },
-  {
-    name: "欧欧",
-    description: "jazz",
-    avatar:
-      "https://mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78.cdn.bspapp.com/teachers/IMG_0942.jpg",
-  },
-  {
-    name: "王老师",
-    description: "舞蹈专家",
-    avatar:
-      "https://mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78.cdn.bspapp.com/teachers/IMG_0943.jpg",
-  },
-  {
-    name: "赵老师",
-    description: "高级舞蹈教练",
-    avatar:
-      "https://mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78.cdn.bspapp.com/teachers/IMG_0941.jpg",
-  },
-  {
-    name: "王老师",
-    description: "舞蹈专家",
-    avatar:
-      "https://mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78.cdn.bspapp.com/teachers/IMG_0943.jpg",
-  },
-  {
-    name: "赵老师",
-    description: "高级舞蹈教练",
-    avatar:
-      "https://mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78.cdn.bspapp.com/teachers/IMG_0941.jpg",
-  },
-  // Add more teachers here
-]);
+const db = uniCloud.database();
+const teachers = ref([]);
+const count = ref("");
+
+db.collection("teachers")
+  .get()
+  .then((res) => {
+    console.log("res---", res);
+    if (res.result.errCode === 0) {
+      teachers.value = res.result.data;
+      count.value = res.result.data.length;
+    }
+  });
 
 const viewDetails = (teacher) => {
   // Navigate to teacher detail page
@@ -104,7 +78,7 @@ const bookCourse = (teacher) => {
 
 .avatar {
   width: 100%;
-  height: 170rpx;
+  height: 210rpx;
   // border-radius: 50%; /* Circle shape */
   // margin-bottom: 10rpx;
   position: relative;

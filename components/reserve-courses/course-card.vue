@@ -14,22 +14,23 @@
         <view class="course-difficulty">
           <text>难度:</text>
           <view class="stars">
-            <view v-for="n in 5" :key="n" class="star">
-              <text v-if="n <= difficulty" class="filled">★</text>
+            <view v-for="n in 3" :key="n" class="star">
+              <text v-if="n <= starCount" class="filled">★</text>
               <text v-else>☆</text>
             </view>
           </view>
         </view>
-      </view>
-      <!-- 学生头像列表 -->
-      <view class="student-avatar-list">
-        <view
-          v-for="(student, index) in students"
-          :key="index"
-          class="avatar-wrapper">
-          <image :src="student.avatar" class="avatar" />
+        <!-- 学生头像列表 -->
+        <view class="student-avatar-list" v-if="students.length">
+          <view
+            v-for="(student, index) in starCount"
+            :key="index"
+            class="avatar-wrapper">
+            <image :src="student.avatar" class="avatar" />
+          </view>
         </view>
       </view>
+
       <!-- 预约按钮 -->
       <button class="reserve-btn" @click="bookCourse">预约课程</button>
     </view>
@@ -37,21 +38,42 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
 const props = defineProps({
   courseName: String,
   teacherName: String,
   courseTime: String,
+  courseLevel: String,
   difficulty: Number, // 课程难度：1-5
   teacherImage: String,
   students: Array, // 学生 avatar 列表
 });
 
+const userInfo = uni.getStorageSync("userInfo");
+
+const students = [];
+const starCount = computed(() => {
+  if (props.courseLevel === "入门") {
+    return 1;
+  } else if (props.courseLevel === "基础") {
+    return 2;
+  } else if (props.courseLevel === "进阶") {
+    return 3;
+  }
+});
 const bookCourse = async (props) => {
+  console.log("userInfo", userInfo);
+  if (!userInfo || (userInfo && !userInfo.mobile)) {
+    uni.navigateTo({
+      url: "/pages/login/login",
+    });
+  } else {
+  }
   // const { success } = await cloud.callFunction('bookCourse', { userId, courseId: co})
-  uni.showToast({
-    title: "已预约",
-    icon: "success",
-  });
+  // uni.showToast({
+  //   title: "已预约",
+  //   icon: "success",
+  // });
 };
 </script>
 
@@ -73,7 +95,6 @@ const bookCourse = async (props) => {
     display: flex;
     flex-direction: column;
     // justify-content: space-between;
-    padding: 10px;
     color: #fff;
 
     /* 透明蒙版 */
@@ -83,7 +104,7 @@ const bookCourse = async (props) => {
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: rgba(0, 0, 0, 0.4); /* 黑色背景，透明度为 0.4 */
+      background-color: rgba(0, 0, 0, 0.5); /* 黑色背景，透明度为 0.4 */
       z-index: 1;
     }
 
@@ -96,9 +117,12 @@ const bookCourse = async (props) => {
 
     .course-info {
       // background: rgba(0, 0, 0, 0.5);
-      padding: 10px;
+      padding: 10px 20px;
       border-radius: 5px;
-
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      flex: 1;
       .teacher-name {
         font-size: 16px;
       }
