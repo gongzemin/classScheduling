@@ -8,18 +8,32 @@
       <view class="overlay"></view>
       <!-- 课程内容 -->
       <view class="course-info">
-        <text class="course-name">{{ courseName }}</text>
-        <view class="teacher-name mt-10">{{ teacherName }}</view>
-        <view class="course-time mt-40">时间: {{ courseTime }}</view>
-        <view class="course-difficulty">
-          <text>难度:</text>
-          <view class="stars">
-            <view v-for="n in 3" :key="n" class="star">
-              <text v-if="n <= starCount" class="filled">★</text>
-              <text v-else>☆</text>
+        <view class="course-time">
+          {{ courseTime }}
+        </view>
+        <view class="course-name flex items-center">
+          {{ courseName }}
+          <view class="flex items-center ml-20 mt-5">
+            <view class="course-level">{{ courseLevel }}</view>
+            <view class="course-difficulty">
+              <!-- <view class="label">难度:</view> -->
+              <view class="stars">
+                <view v-for="n in 3" :key="n" class="star">
+                  <text v-if="n <= starCount" class="filled">★</text>
+                  <text v-else>☆</text>
+                </view>
+              </view>
             </view>
           </view>
         </view>
+
+        <view class="teacher-name mt-40">
+          <view>{{ teacherName }}</view>
+        </view>
+        <view class="reserve-static">
+          已预约 {{ bookInfo.count }}/{{ bookInfo.capacity }}
+        </view>
+
         <!-- 学生头像列表 -->
         <view class="student-avatar-list" v-if="students.length">
           <view
@@ -32,13 +46,13 @@
       </view>
 
       <!-- 预约按钮 -->
-      <button class="reserve-btn" @click="bookCourse">预约课程</button>
+      <button class="reserve-btn" @click="bookCourse">预约</button>
     </view>
   </view>
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, reactive } from "vue";
 const props = defineProps({
   courseName: String,
   teacherName: String,
@@ -50,7 +64,10 @@ const props = defineProps({
 });
 
 const userInfo = uni.getStorageSync("userInfo");
-
+const bookInfo = reactive({
+  count: 0,
+  capacity: 45,
+});
 const students = [];
 const starCount = computed(() => {
   if (props.courseLevel === "入门") {
@@ -123,38 +140,46 @@ const bookCourse = async (props) => {
       flex-direction: column;
       justify-content: center;
       flex: 1;
+      .course-time {
+        font-size: 16px;
+      }
       .teacher-name {
         font-size: 16px;
       }
       .course-name {
-        font-size: 18px;
-        font-weight: bold;
+        font-size: 16px;
+      }
+      .course-level {
+        font-size: 11px;
+        color: #e1e1e1;
+      }
+      .reserve-static {
+        font-size: 11px;
+        margin-top: 5rpx;
       }
 
       .course-difficulty {
-        margin-top: 2rpx;
+        margin-top: -1rpx;
         display: flex;
         align-items: center;
+        color: #e1e1e1;
 
-        text {
-          font-size: 14px;
+        .label {
+          font-size: 12px;
         }
 
         .stars {
           display: flex;
           margin-left: 5px;
+          margin-top: -1rpx;
           .star {
-            font-size: 18px;
+            font-size: 12px;
             margin-right: 2px;
           }
           .filled {
             color: gold;
           }
         }
-      }
-
-      .course-time {
-        font-size: 16px;
       }
     }
 

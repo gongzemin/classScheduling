@@ -5,20 +5,24 @@
       <view class="flex justify-between">
         <view class="info">
           <view class="label">电话:</view>
-          <text class="content phone" @click="makePhoneCall">{{ phone }}</text>
+          <text class="content phone" @click="makePhoneCall">
+            {{ studioInfo.phone }}
+          </text>
         </view>
 
         <view class="info">
           <view class="label">微信:</view>
           <text class="content wechat" @click="copyWechatId">
-            {{ wechatId }}
+            {{ studioInfo.wechatId }}
           </text>
         </view>
       </view>
       <view class="info">
         <view class="label">地址:</view>
         <!-- <uni-icons type="location" size="20"></uni-icons> -->
-        <text class="content address" @click="openMap">{{ address }}</text>
+        <text class="content address" @click="openMap">
+          {{ studioInfo.address }}
+        </text>
       </view>
     </view>
   </view>
@@ -29,10 +33,9 @@ import Title from "../Title.vue";
 import { ref } from "vue";
 // import { showToast } from "@dcloudio/uni-app";
 
-// Sample data
-const address = ref("广东省深圳市龙华区梅坂大道民乐科技园E栋创客工坊410室");
-const phone = ref("166-7673-6546");
-const wechatId = ref("166-7673-6546");
+const props = defineProps({
+  studioInfo: Object,
+});
 
 // Navigate to the built-in map with the address
 const openMap = () => {
@@ -44,9 +47,9 @@ const openMap = () => {
 // Make a phone call
 const makePhoneCall = () => {
   uni.makePhoneCall({
-    phoneNumber: phone.value,
+    phoneNumber: props.studioInfo.phone,
     success() {
-      console.log("Calling " + phone.value);
+      console.log("Calling " + studioInfo.phone);
     },
     fail(err) {
       console.error("Failed to make a call", err);
@@ -57,7 +60,7 @@ const makePhoneCall = () => {
 // Copy WeChat ID to clipboard
 const copyWechatId = () => {
   uni.setClipboardData({
-    data: wechatId.value,
+    data: props.studioInfo.wechatId,
     success() {
       // uni.showToast({
       //   title: "复制成功",
@@ -80,7 +83,7 @@ const copyWechatId = () => {
 .info {
   display: flex;
   margin-bottom: 20rpx;
-  justify-content: space-between;
+  // justify-content: space-between;
   align-items: center;
 }
 

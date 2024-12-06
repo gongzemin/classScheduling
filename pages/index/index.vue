@@ -1,15 +1,27 @@
 <template>
   <view class="home">
-    <home-header></home-header>
+    <home-header :studioInfo="studioInfo" v-if="studioInfo"></home-header>
     <view class="main">
       <home-overview></home-overview>
       <home-teachers></home-teachers>
-      <home-contact></home-contact>
+      <home-contact :studioInfo="studioInfo"></home-contact>
     </view>
   </view>
 </template>
 
-<script setup></script>
+<script setup>
+const db = uniCloud.database();
+import { reactive, ref } from "vue";
+let studioInfo = reactive({});
+db.collection("studio")
+  .get()
+  .then((res) => {
+    if (res.result.errCode === 0) {
+      Object.assign(studioInfo, res.result.data[0]);
+    }
+    console.log("res--studio-", studioInfo);
+  });
+</script>
 
 <style lang="scss">
 .home {

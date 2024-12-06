@@ -5,7 +5,7 @@
       :key="index"
       class="course-wrapper">
       <course-card
-        :courseName="`${course.courseType}${course.courseLevel}`"
+        :courseName="course.courseType"
         :teacherName="course.courseTeacherName"
         :courseLevel="course.courseLevel"
         :courseTime="course.time"

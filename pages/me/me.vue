@@ -183,32 +183,32 @@ uni-button:after {
   justify-content: space-between;
   flex-wrap: wrap;
   margin-top: 80rpx;
-}
 
-.card-item {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 20rpx 0;
-  width: 30%;
-}
+  .card-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20rpx 0;
+    width: 30%;
+  }
 
-.card-item:last-child {
-  border-bottom: none;
-}
+  .card-item:last-child {
+    border-bottom: none;
+  }
 
-.arrow-icon {
-  width: 20rpx;
-  height: 20rpx;
-}
+  .arrow-icon {
+    width: 20rpx;
+    height: 20rpx;
+  }
 
-/* CSS Arrow Right */
-.arrow-right {
-  width: 0;
-  height: 0;
-  border-top: 10rpx solid transparent;
-  border-bottom: 10rpx solid transparent;
-  border-left: 10rpx solid #ccc;
+  /* CSS Arrow Right */
+  .arrow-right {
+    width: 0;
+    height: 0;
+    border-top: 10rpx solid transparent;
+    border-bottom: 10rpx solid transparent;
+    border-left: 10rpx solid #ccc;
+  }
 }
 </style>

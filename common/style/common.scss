@@ -2,11 +2,23 @@
   margin-top: 20rpx;
   margin-bottom: 20rpx;
 }
+.ml-10 {
+  margin-left: 10rpx;
+}
+.ml-20 {
+  margin-left: 20rpx;
+}
 .mt-10 {
   margin-top: 10rpx;
 }
 .mt-20 {
   margin-top: 20rpx;
+}
+.mt-2 {
+  margin-top: 2rpx;
+}
+.mt-5 {
+  margin-top: 5rpx;
 }
 .mb-5 {
   margin-bottom: 5px;
@@ -14,6 +26,7 @@
 .mt-40 {
   margin-top: 40rpx;
 }
+
 .mt-80 {
   margin-top: 80rpx;
 }
@@ -40,4 +53,7 @@
 }
 .justify-between {
   justify-content: space-between;
+}
+.items-center {
+  align-items: center;
 }

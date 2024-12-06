@@ -28,16 +28,22 @@ const db = uniCloud.database();
 const teachers = ref([]);
 const count = ref("");
 
-db.collection("teachers")
-  .get()
-  .then((res) => {
-    console.log("res---", res);
-    if (res.result.errCode === 0) {
-      teachers.value = res.result.data;
-      count.value = res.result.data.length;
-    }
+const getTeachers = () => {
+  uni.showLoading({
+    title: "正在加载数据",
   });
-
+  db.collection("teachers")
+    .get()
+    .then((res) => {
+      console.log("res---", res);
+      uni.hideLoading();
+      if (res.result.errCode === 0) {
+        teachers.value = res.result.data;
+        count.value = res.result.data.length;
+      }
+    });
+};
+getTeachers();
 const viewDetails = (teacher) => {
   // Navigate to teacher detail page
   uni.navigateTo({
