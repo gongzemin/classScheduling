@@ -1,25 +1,27 @@
 <template>
-  <view class="container">
+  <view class="me-container">
     <!-- 用户信息部分 -->
     <view class="user-info">
       <view class="left-section">
         <button
           class="avatar-wrapper"
           open-type="chooseAvatar"
+          v-if="isLoggedIn"
           @chooseavatar="onChooseAvatar">
-          <image class="avatar" :src="avatarUrl" mode="aspectFill" />
+          <image class="avatar" :src="userInfo.avatar" mode="aspectFill" />
         </button>
         <view class="flex flex-col">
           <button v-if="!isLoggedIn" class="login-btn" @click="handleLogin">
             登录/注册
           </button>
           <input
-            v-else
-            v-model="nickname"
+            v-model="userInfo.nickname"
             class="weui-input mb-5"
+            v-else
+            @blur="onNameChange"
             type="nickname"
             placeholder="请输入昵称" />
-          <view v-if="isLoggedIn">{{ userInfo.mobile }}</view>
+          <view v-if="isLoggedIn">{{ encryptMobile }}</view>
         </view>
       </view>
     </view>
@@ -39,31 +41,99 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { ref, reactive, onMounted, computed } from "vue";
 
 const db = uniCloud.database();
-// 用户信息
-const avatarUrl = ref("/static/images/defaultAvatar.jpeg"); // 默认头像
-const nickname = ref("未登录"); // 用户昵称
+const collection = db.collection("users");
+
 // 登录状态
 const isLoggedIn = ref(false);
 const userInfo = reactive({
-  mobile: "",
+  mobile: "15112653200",
+  avatar: "/static/images/defaultAvatar.jpeg", // 默认头像
+  userId: "67526d0789bd27450be85c4e",
+  nickname: "未登录",
+  role: "",
 });
 
-// 获取微信头像
-const onChooseAvatar = (e: any) => {
-  // 获取选中的头像
-  avatarUrl.value = e.detail.avatarUrl;
-  db.collection("users")
-    .add({
-      avatar: "avatarUrl.value",
-    })
-    .then((res) => {
-      console.log("res", res);
-    });
-  console.log("选择的头像:", avatarUrl.value, e);
+// 获取用户电话获取用户id
+// 获取用户信息的方法
+const getUser = async () => {
+  try {
+    const queryRes = await collection
+      .where({ mobile: userInfo.mobile })
+      .field("mobile,role")
+      .get();
+
+    console.log("queryRes----", queryRes);
+    if (queryRes.result.errCode === 0 && queryRes.result.data.length) {
+      userInfo.userId = queryRes.result.data[0]._id;
+      userInfo.role = queryRes.result.data[0].role;
+      const existingUserInfo = uni.getStorageSync("userInfo") || {};
+      uni.setStorageSync("userInfo", {
+        ...existingUserInfo,
+        role: queryRes.result.data[0].role,
+        userId: queryRes.result.data[0]._id,
+      });
+      console.log("获取到的 userId:", userInfo.userId);
+      return true;
+    } else {
+      console.warn("未查询到用户信息");
+      return false;
+    }
+  } catch (error) {
+    console.error("查询用户信息失败:", error);
+    return false;
+  }
+};
+getUser();
+const onChooseAvatar = async (e: any) => {
+  const tempFilePath = e.detail.avatarUrl; // 获取临时路径
+  userInfo.avatar = e.detail.avatarUrl;
+  console.log("临时路径:", tempFilePath);
+
+  // 提取文件名（包含扩展名）
+  const fileName = tempFilePath.substring(tempFilePath.lastIndexOf("/") + 1);
+
+  // 判断 userId 是否存在
+  if (!userInfo.userId) {
+    console.error("无法获取用户信息，无法上传头像");
+    return;
+  }
+
+  // 上传头像到服务器
+  uniCloud.uploadFile({
+    filePath: tempFilePath, // 本地临时文件路径
+    cloudPath: `avatar/${fileName}`, // 文件存储路径
+    cloudPathAsRealPath: true, // 使用 cloudPath 作为绝对路径
+    success: (uploadRes) => {
+      console.log("uploadRes.data", uploadRes);
+      // 确保上传成功后处理
+      if (uploadRes.success) {
+        const avatar = uploadRes.fileID; // 服务器返回的文件路径
+        const existingUserInfo = uni.getStorageSync("userInfo") || {};
+        uni.setStorageSync("userInfo", { ...existingUserInfo, avatar });
+
+        // 查询是否已经有该用户的 avatar 数据
+        collection
+          .doc(userInfo.userId)
+          .update({ avatar })
+          .then((updateRes) => {
+            uni.showToast({
+              title: "头像设置成功",
+              icon: "none",
+            });
+            console.log("头像更新成功:", updateRes);
+          })
+          .catch((err) => {
+            console.error("头像更新失败:", err);
+          });
+      }
+    },
+    fail: (err) => {
+      console.error("上传失败:", err);
+    },
+  });
 };
 
 const menuItems = ref([
@@ -71,7 +141,12 @@ const menuItems = ref([
   { label: "上课记录", path: "course-records", icon: "info" },
   { label: "会员卡", path: "membership-cards", icon: "wallet" },
   {
-    label: "课程表",
+    label: "课程表管理",
+    path: "/pages-courses/courseList/courseList",
+    icon: "wallet",
+  },
+  {
+    label: "用户管理",
     path: "/pages-courses/courseList/courseList",
     icon: "wallet",
   },
@@ -83,31 +158,107 @@ const menuItems = ref([
   },
   { label: "设置", path: "settings", icon: "gear" },
   { label: "意见反馈", path: "feedback", icon: "mail-open" },
+  { label: "退出登录", path: "", icon: "mail-open" },
 ]);
 
-// 路由跳转
-const router = useRouter();
+const encryptMobile = computed(() => {
+  return userInfo.mobile.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2");
+});
 
 const navigateTo = (path: string) => {
-  uni.navigateTo({
-    url: path,
-  });
+  if (path) {
+    uni.navigateTo({
+      url: path,
+    });
+  } else {
+    logout();
+  }
 };
 
-// 模拟登录
+// 跳转到登录页
 const handleLogin = () => {
   uni.navigateTo({
     url: `../login/login`,
   });
-  console.log("用户昵称:", nickname.value);
+  console.log("用户昵称:", userInfo.nickname);
 };
 
-onMounted(() => {
+const goLoginPage = () => {
+  if (!isLoggedIn.value) {
+    uni.showToast({
+      title: "未登录",
+      icon: "none",
+    });
+    return true;
+  }
+  return false;
+};
+
+const logout = () => {
+  console.log("logout");
+  if (goLoginPage()) return;
+  uni.showModal({
+    title: "是否确认退出",
+    success: (res) => {
+      console.log(res);
+      if (res.confirm) {
+        uni.clearStorageSync();
+      }
+    },
+  });
+};
+
+const onNameChange = async (e) => {
+  userInfo.nickname = e.detail.value;
+  console.log("微信返回的用户名:", e, userInfo.userId);
+
+  // 判断 userId 是否存在
+  if (!userInfo.userId) {
+    console.error("无法获取用户信息，无法更新昵称");
+    return;
+  }
+
+  const existingUserInfo = uni.getStorageSync("userInfo") || {};
+  uni.setStorageSync("userInfo", {
+    ...existingUserInfo,
+    nickname: e.detail.value,
+  });
+
+  // 更新用户昵称
+  collection
+    .doc(userInfo.userId)
+    .update({ nickname: e.detail.value })
+    .then((updateRes) => {
+      uni.showToast({
+        title: "名称设置成功",
+        icon: "none",
+      });
+      console.log("名称更新成功:", updateRes);
+    })
+    .catch((err) => {
+      console.error("名称更新失败:", err);
+    });
+};
+
+onMounted(async () => {
   const storedUserInfo = uni.getStorageSync("userInfo");
+  // 回显用户电话 头像 昵称
+  console.log("storedUserInfo", storedUserInfo);
+  if (storedUserInfo && storedUserInfo.avatar) {
+    userInfo.avatar = storedUserInfo.avatar;
+  }
+  if (storedUserInfo && storedUserInfo.nickname) {
+    userInfo.nickname = storedUserInfo.nickname;
+  } else {
+    userInfo.nickname = "请输入昵称";
+  }
   if (storedUserInfo && storedUserInfo.mobile) {
     userInfo.mobile = storedUserInfo.mobile; // 直接更新 mobile 字段
     isLoggedIn.value = true;
-    nickname.value = "请输入昵称";
+    const userFetched = await getUser();
+    if (!userFetched) {
+      console.error("用户信息获取失败");
+    }
   }
 });
 </script>
@@ -119,96 +270,96 @@ button::after {
 }
 </style>
 <style scoped lang="scss">
-.container {
-  padding: 20rpx;
-}
+.me-container {
+  padding: 70rpx 20rpx 30rpx;
 
-.user-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* Left section (avatar, nickname) on the left and login button on the right */
-  margin-bottom: 40rpx;
-}
-
-.left-section {
-  display: flex;
-  align-items: center;
-}
-
-.avatar-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 120rpx;
-  height: 120rpx;
-  border-radius: 50%;
-  overflow: hidden;
-  margin-right: 20rpx;
-  padding-left: 0rpx;
-  padding-right: 0rpx;
-}
-
-.avatar {
-  width: 100%;
-  height: 100%;
-}
-.avatar::after {
-  border: 1px solid transparent !important;
-}
-uni-button:after {
-  border: 1px solid transparent !important;
-}
-
-.weui-input {
-  width: 180rpx;
-  padding: 10rpx;
-  font-size: 32rpx;
-  border: 1rpx solid #ddd;
-  border-radius: 8rpx;
-}
-
-.login-btn {
-  background-color: rgb(116, 219, 239);
-  color: #fff;
-  border-radius: 8rpx;
-  margin-right: 5rpx;
-}
-
-.card {
-  background-color: #fff;
-  border-radius: 16rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
-  padding: 20rpx;
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  margin-top: 80rpx;
-
-  .card-item {
+  .user-info {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: space-between; /* Left section (avatar, nickname) on the left and login button on the right */
+    margin-bottom: 40rpx;
+    padding-left: 20rpx;
+  }
+
+  .left-section {
+    display: flex;
+    align-items: center;
+  }
+
+  .avatar-wrapper {
+    display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20rpx 0;
-    width: 30%;
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 20rpx;
+    padding-left: 0rpx;
+    padding-right: 0rpx;
   }
 
-  .card-item:last-child {
-    border-bottom: none;
+  .avatar {
+    width: 100%;
+    height: 100%;
+  }
+  .avatar::after {
+    border: 1px solid transparent !important;
+  }
+  uni-button:after {
+    border: 1px solid transparent !important;
   }
 
-  .arrow-icon {
-    width: 20rpx;
-    height: 20rpx;
+  .weui-input {
+    width: 280rpx;
+    padding: 10rpx 0rpx;
+    font-size: 32rpx;
+    border-radius: 8rpx;
   }
 
-  /* CSS Arrow Right */
-  .arrow-right {
-    width: 0;
-    height: 0;
-    border-top: 10rpx solid transparent;
-    border-bottom: 10rpx solid transparent;
-    border-left: 10rpx solid #ccc;
+  .login-btn {
+    background-color: rgb(116, 219, 239);
+    color: #fff;
+    border-radius: 8rpx;
+    margin-right: 5rpx;
+  }
+
+  .card {
+    background-color: #fff;
+    border-radius: 16rpx;
+    box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+    padding: 20rpx;
+    display: flex;
+    // justify-content: space-between;
+    flex-wrap: wrap;
+    margin-top: 60rpx;
+
+    .card-item {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20rpx 0;
+      width: 32%;
+    }
+
+    .card-item:last-child {
+      border-bottom: none;
+    }
+
+    .arrow-icon {
+      width: 20rpx;
+      height: 20rpx;
+    }
+
+    /* CSS Arrow Right */
+    .arrow-right {
+      width: 0;
+      height: 0;
+      border-top: 10rpx solid transparent;
+      border-bottom: 10rpx solid transparent;
+      border-left: 10rpx solid #ccc;
+    }
   }
 }
 </style>

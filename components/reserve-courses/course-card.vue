@@ -47,12 +47,17 @@
 
       <!-- 预约按钮 -->
       <button class="reserve-btn" @click="bookCourse">预约</button>
+      <!-- 管理员操作按钮 -->
+      <view v-if="isAdmin">
+        <button class="delete-btn" @click="deleteCourse">删除</button>
+        <button class="edit-btn" @click="editCourse">修改</button>
+      </view>
     </view>
   </view>
 </template>
 
 <script setup>
-import { computed, reactive } from "vue";
+import { ref, computed, reactive } from "vue";
 const props = defineProps({
   courseName: String,
   teacherName: String,
@@ -60,10 +65,15 @@ const props = defineProps({
   courseLevel: String,
   difficulty: Number, // 课程难度：1-5
   teacherImage: String,
+  courseId: String,
   students: Array, // 学生 avatar 列表
 });
 
+const db = uniCloud.database();
 const userInfo = uni.getStorageSync("userInfo");
+// 导入云对象
+const schedule = uniCloud.importObject("schedule");
+const emit = defineEmits(["refreshList"]);
 const bookInfo = reactive({
   count: 0,
   capacity: 45,
@@ -78,6 +88,12 @@ const starCount = computed(() => {
     return 3;
   }
 });
+
+const storedUserInfo = ref(uni.getStorageSync("userInfo"));
+const isAdmin = computed(() =>
+  storedUserInfo.value?.role === "superAdmin" ? true : false
+);
+
 const bookCourse = async (props) => {
   console.log("userInfo", userInfo);
   if (!userInfo || (userInfo && !userInfo.mobile)) {
@@ -92,6 +108,74 @@ const bookCourse = async (props) => {
   //   icon: "success",
   // });
 };
+
+// 删除前确认
+function deleteCourse() {
+  uni.showModal({
+    title: "确认删除",
+    content: "您确定要删除这条数据吗？删除后无法恢复。",
+    success(res) {
+      if (res.confirm) {
+        // 用户点击确认，执行删除操作
+        deleteData();
+      } else {
+        // 用户点击取消，不做任何操作
+        console.log("用户取消删除");
+      }
+    },
+  });
+}
+
+const editCourse = () => {
+  uni.navigateTo({
+    url: `/pages-courses/newCourse/newCourse?id=${props.courseId}`,
+  });
+};
+
+// 执行删除操作
+// 前端调用云函数进行删除
+async function deleteData() {
+  const userInfo = uni.getStorageSync("userInfo");
+  console.log("adminnnnnn00000-");
+  if (userInfo && userInfo.role === "superAdmin") {
+    console.log("adminnnnnn", props.courseId, userInfo.userId);
+    db.collection("class-schedule")
+      .doc(props.courseId)
+      .remove()
+      .then((res) => {
+        uni.showToast({
+          icon: "none",
+          title: "删除成功！",
+        });
+        emit("refreshList");
+        console.log("res88888", res);
+      })
+      .catch((err) => {
+        console.log("err", err);
+      });
+
+    // schedule
+    //   .removeCourse({
+    //     docId: props.courseId,
+    //     userId: userInfo.userId,
+    //   })
+    //   .then((res) => {
+    //     if (res.code === 200) {
+    //       console.log("课程删除成功", res.message);
+    //     } else {
+    //       console.error("删除失败", res.message);
+    //     }
+    //   })
+    //   .catch((err) => {
+    //     console.error("调用失败", err);
+    //   });
+  } else {
+    uni.showToast({
+      title: "无权限删除",
+      icon: "none",
+    });
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -215,6 +299,29 @@ const bookCourse = async (props) => {
       text-align: center;
       border-radius: 5px;
       z-index: 2; /* 确保按钮在蒙版上方 */
+    }
+
+    /* 管理员操作按钮样式 */
+    .edit-btn,
+    .delete-btn {
+      position: absolute;
+      top: 10px;
+      background-color: #006b52;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      text-align: center;
+      border-radius: 5px;
+      z-index: 3;
+    }
+
+    .delete-btn {
+      right: 165rpx;
+      background-color: #92181b;
+    }
+
+    .edit-btn {
+      right: 25rpx;
     }
   }
 }

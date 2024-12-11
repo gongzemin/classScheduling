@@ -1,9 +1,6 @@
 <template>
-  <view class="p-20">
-    <view
-      v-for="(course, index) in dayCourses"
-      :key="index"
-      class="course-wrapper">
+  <view class="p-20 course-wrapper">
+    <view v-for="(course, index) in dayCourses" :key="index" class="mb-20">
       <course-card
         :courseName="course.courseType"
         :teacherName="course.courseTeacherName"
@@ -11,13 +8,18 @@
         :courseTime="course.time"
         :difficulty="course.difficulty"
         :teacherImage="course.courseTeacherPic"
-        :students="course.students" />
+        :courseId="course._id"
+        :students="course.students"
+        @refreshList="fetchCourses()" />
+    </view>
+    <view class="add" v-if="isAdmin" @click="goNew">
+      <uni-icons type="plusempty" size="40" color="#fff"></uni-icons>
     </view>
   </view>
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, computed } from "vue";
 import courseCard from "./course-card.vue";
 import { formatTimestampToHHMM } from "../../common/util";
 const props = defineProps({
@@ -27,6 +29,11 @@ const props = defineProps({
 const db = uniCloud.database();
 // 用于保存当前需要展示的课程
 const dayCourses = ref([]);
+
+const storedUserInfo = ref(uni.getStorageSync("userInfo"));
+const isAdmin = computed(() =>
+  storedUserInfo.value?.role === "superAdmin" ? true : false
+);
 const courses = [
   {
     name: "音乐创作",
@@ -121,6 +128,13 @@ const updateDayCourses = async (dayOfWeek) => {
   dayCourses.value = course;
   console.log("Filtered day courses:", dayCourses.value);
 };
+
+const goNew = () => {
+  uni.navigateTo({
+    url: "/pages-courses/newCourse/newCourse",
+  });
+};
+
 // 监听 props 的 dayOfTheWeek 变化
 watch(
   () => props.dayOfTheWeek,
@@ -132,15 +146,27 @@ watch(
 // 在组件挂载时，计算今天的课程
 onMounted(() => {
   uni.showLoading({
-    title: "正在加载数据...",
+    // title: "正在加载数据...",
     mask: true,
   });
   updateDayCourses(props.dayOfTheWeek);
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .course-wrapper {
-  margin-bottom: 20px;
+  .add {
+    width: 140rpx;
+    height: 140rpx;
+    background-color: #74dbef;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 1%;
+    right: 3%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+  }
 }
 </style>

@@ -1,9 +1,6 @@
 <template>
-  <view class="p-20">
-    <view
-      v-for="(course, index) in dayCourses"
-      :key="index"
-      class="course-wrapper">
+  <view class="p-20 course-wrapper">
+    <view v-for="(course, index) in dayCourses" :key="index" class="mb-20">
       <course-card
         :courseName="course.courseType"
         :teacherName="course.courseTeacherName"
@@ -12,6 +9,7 @@
         :teacherImage="course.courseTeacherPic"
         :students="course.students" />
     </view>
+    <view class="add">新增课程</view>
   </view>
 </template>
 
@@ -136,11 +134,37 @@ onMounted(() => {
     mask: true,
   });
   updateDayCourses(props.dayOfTheWeek);
+
+  if (typeof getCurrentPages === "function" && getCurrentPages().length) {
+    wx.showShareMenu();
+    const currentPage = getCurrentPages().slice(-1)[0];
+    currentPage.onShareAppMessage = () => {
+      return {
+        title: "Pick Star 娱乐",
+        path: "/pages/reserve/reserve",
+        // imageUrl: "../../static/images/share.jpg",
+      };
+    };
+    currentPage.onShareTimeline = () => {
+      return {
+        title: "Pick Star 娱乐",
+        // imageUrl: "../../static/images/moment.jpg",
+      };
+    };
+  }
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .course-wrapper {
-  margin-bottom: 20px;
+  .add {
+    width: 140rpx;
+    height: 140rpx;
+    background-color: #0199fe;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 3%;
+    right: 3%;
+  }
 }
 </style>

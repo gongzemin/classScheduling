@@ -1,6 +1,6 @@
 <template>
   <view class="form-container">
-    <view class="form-title">新建课程</view>
+    <view class="form-title">{{ queryId ? "编辑课程" : "新建课程" }}</view>
 
     <uni-forms
       :modelValue="formData"
@@ -75,24 +75,22 @@
       </uni-forms-item>
 
       <!-- 单选框组：选择已有老师 or 新增老师 -->
-      <uni-forms-item name="teacherOption" label="上课老师选项" required>
-        <radio-group
-          :value="formData.teacherOption"
-          @change="onTeacherOptionChange">
-          <label class="radio-label mr-10">
-            <radio value="existing" />
-            选择已有的老师
-          </label>
-          <label class="radio-label">
-            <radio value="new" />
-            新增上课老师
+      <uni-forms-item name="addTeacherType" label="上课老师选项" required>
+        <radio-group name="group1" @change="onaddTeacherTypeChange">
+          <label
+            class="radio mr-40"
+            v-for="item in radioList"
+            :key="item.value">
+            <radio :value="item.value" :checked="item.checked">
+              {{ item.name }}
+            </radio>
           </label>
         </radio-group>
       </uni-forms-item>
 
       <!-- 课程老师选择 如果老师不在列表中 请在下面的表单中输入老师信息 -->
       <uni-forms-item
-        v-if="formData.teacherOption === 'existing'"
+        v-if="formData.addTeacherType === 'existing'"
         name="teacher"
         label="请选择上课老师">
         <picker
@@ -105,19 +103,14 @@
         </picker>
       </uni-forms-item>
       <view v-if="formData.selectedTeacherName" class="teacher-preview">
-        <image
-          :src="
-            formData.selectedTeacherIndex &&
-            teachers[formData.selectedTeacherIndex].courseTeacherPic
-          "
-          class="teacher-image" />
+        <image :src="formData.selectedTeacherPic" class="teacher-image" />
       </view>
 
       <uni-forms-item
         class="form-item"
         name="courseLevel"
         label="请输入上课老师名称"
-        v-if="formData.teacherOption === 'new'">
+        v-if="formData.addTeacherType === 'new'">
         <input class="form-input" v-model="formData.courseTeacherName" />
       </uni-forms-item>
 
@@ -126,15 +119,11 @@
         class="form-item"
         name="courseLevel"
         label="请上传老师图片"
-        v-if="formData.teacherOption === 'new'">
+        v-if="formData.addTeacherType === 'new'">
         <uni-file-picker
           fileMediatype="image"
           :limit="1"
           @success="onImageUploadSuccess"></uni-file-picker>
-        <!--    <button @click="uploadImage" class="upload-btn">上传图片</button> -->
-        <!--    <view class="teacher-preview" v-if="formData.courseTeacherPic">
-          <image :src="formData.courseTeacherPic" class="teacher-image" />
-        </view> -->
       </uni-forms-item>
 
       <!-- 操作按钮 -->
@@ -148,13 +137,16 @@
 
 <script lang="ts" setup>
 import { ref, reactive } from "vue";
-import { onReady } from "@dcloudio/uni-app";
+import { onReady, onLoad } from "@dcloudio/uni-app";
+import { formatTimestampToHHMM } from "../../common/util";
 
 const db = uniCloud.database();
 interface Teacher {
   name: string;
   courseTeacherPic: string;
 }
+
+let queryId = ref(); // 传过来的_id
 
 onReady(() => {
   // 设置自定义表单校验规则，必须在节点渲染完毕后执行
@@ -171,9 +163,9 @@ const formData = reactive({
   endTime: null,
   courseType: "",
   courseLevel: "",
-  teacherOption: "", // 默认选项为已有老师
+  addTeacherType: null, // 默认选项为已有老师
   selectedTeacherName: "",
-  selectedTeacherIndex: null,
+  selectedTeacherPic: "",
   courseTeacherName: "",
   courseTeacherPic: "",
 });
@@ -196,9 +188,22 @@ const rules = {
   courseLevel: {
     rules: [{ required: true, errorMessage: "请选择课程种类" }],
   },
-  teacherOption: {
+  addTeacherType: {
     rules: [{ required: true, errorMessage: "请选择上课老师选项" }],
   },
+};
+
+let radioList = ref([
+  { name: "选择已有的老师", value: "existing", checked: false },
+  { name: "新增上课老师", value: "new", checked: false },
+]);
+
+const radioChange = (e) => {
+  let radioItems = radioList.value;
+  for (let i = 0, len = radioItems.length; i < len; ++i) {
+    radioItems[i].checked = radioItems[i].value === e.detail.value;
+  }
+  radioList.value = radioItems;
 };
 
 const dayList = ref([
@@ -231,20 +236,27 @@ const onDayChange = (e) => {
   formData.day = dayList.value[index].text; // 根据索引获取对应的 `text`
   dayIndex.value = index; // 更新当前索引
 };
+// const emit = defineEmits(["refreshList"]);
 
-const onTeacherOptionChange = (e) => {
-  formData.teacherOption = e.detail.value; // 获取选中的值
-  formData.selectedTeacherIndex = null;
+const onaddTeacherTypeChange = (e) => {
+  console.log("heart-", e.detail);
+  formData.addTeacherType = e.detail.value; // 获取选中的值
+  let radioItems = radioList.value;
+  for (let i = 0, len = radioItems.length; i < len; ++i) {
+    radioItems[i].checked = radioItems[i].value === e.detail.value;
+  }
+  radioList.value = radioItems;
   formData.courseTeacherName = "";
   formData.courseTeacherPic = "";
   formData.selectedTeacherName = "";
+  formData.selectedTeacherPic = "";
 };
 
 // 选择教师
 const onTeacherChange = (event: any) => {
   const index = event.detail.value; // 获取选中索引
   formData.selectedTeacherName = teachers.value[index].name;
-  formData.selectedTeacherIndex = index;
+  formData.selectedTeacherPic = teachers.value[index].courseTeacherPic;
 };
 // 课程种类
 const onCourseTypeChange = (e: any) => {
@@ -311,15 +323,12 @@ db.collection("teachers")
   });
 
 const resetForm = () => {
-  formData.day = "";
-  formData.startTime = "";
-  formData.endTime = "";
-  formData.courseType = "";
-  formData.courseLevel = "";
-  formData.selectedTeacherName = "";
-  formData.courseTeacherName = "";
-  formData.courseTeacherPic = "";
-  formData.teacherOption = "";
+  Object.keys(formData).forEach((key) => {
+    formData[key] = key === "addTeacherType" ? null : ""; // 特殊处理 `addTeacherType`
+  });
+
+  // 单独处理 `radioList` 的逻辑
+  radioList.value.forEach((item) => (item.checked = false));
 };
 
 const submitForm = () => {
@@ -349,11 +358,22 @@ const submitForm = () => {
         courseTeacherName:
           formData.selectedTeacherName || formData.courseTeacherName, // 如果未选择下拉框中的教师，使用手动输入的教师名
         courseTeacherPic: formData.selectedTeacherName
-          ? teachers[formData.selectedTeacherIndex].courseTeacherPic
+          ? formData.selectedTeacherPic
           : formData.courseTeacherPic, // 教师图片
       };
-
-      const result = await collection.add(dataToSave);
+      let result;
+      if (queryId) {
+        // 编辑操作
+        result = await collection.doc(queryId.value).update(dataToSave);
+        console.log("result----update");
+        if (result.updated === 1) {
+          console.log("更新成功");
+        } else {
+          console.error("未找到对应记录或更新失败");
+        }
+      } else {
+        result = await collection.add(dataToSave);
+      }
 
       if (!formData.selectedTeacherName) {
         const collectionTeacher = db.collection("teachers"); // 替换为你的云数据库集合名称
@@ -372,6 +392,7 @@ const submitForm = () => {
 
       // 清空表单数据
       resetForm();
+      // emit("refreshList");
     })
     .catch((err) => {
       console.error("提交失败", err);
@@ -385,6 +406,61 @@ const submitForm = () => {
 const cancelForm = () => {
   uni.navigateBack();
 };
+
+const getDetail = async () => {
+  let {
+    result: { errCode, data },
+  } = await db
+    .collection("class-schedule")
+    .where({
+      _id: queryId.value,
+    })
+    .get({
+      getOne: true,
+    });
+  if (errCode === 0) {
+    // day: formData.day,
+    // startTime: getTimestamp(formData.startTime),
+    // endTime: getTimestamp(formData.endTime),
+    // courseType: formData.courseType,
+    // courseLevel: formData.courseLevel,
+    // courseTeacherName:
+    //   formData.selectedTeacherName || formData.courseTeacherName, // 如果未选择下拉框中的教师，使用手动输入的教师名
+    // courseTeacherPic: formData.selectedTeacherName
+    //   ? formData.selectedTeacherPic
+    //   : formData.courseTeacherPic, // 教师图片
+    console.log("data---", data);
+    let dataCopy = JSON.parse(JSON.stringify(data));
+    dataCopy.startTime = formatTimestampToHHMM(dataCopy.startTime);
+    dataCopy.endTime = formatTimestampToHHMM(dataCopy.endTime);
+    Object.assign(formData, dataCopy);
+    for (let i = 0, len = radioList.value.length; i < len; ++i) {
+      radioList.value[i].checked =
+        radioList.value[i].value === data.addTeacherType;
+    }
+    if (data.addTeacherType === "existing") {
+      formData.selectedTeacherName = data.courseTeacherName;
+      formData.selectedTeacherPic = data.courseTeacherPic;
+    } else {
+      formData.courseTeacherName = data.courseTeacherName;
+      formData.courseTeacherPic = data.courseTeacherPic;
+    }
+  }
+  uni.hideLoading();
+};
+
+onLoad((e) => {
+  queryId.value = e.id;
+  if (e.id) {
+    uni.showLoading({
+      title: "加载中...",
+    });
+    getDetail();
+    uni.setNavigationBarTitle({
+      title: "编辑课表",
+    });
+  }
+});
 </script>
 
 <style>

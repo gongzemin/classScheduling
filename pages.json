@@ -61,6 +61,23 @@
           }
         }
       ]
+    },
+    {
+      "root": "pages-users",
+      "pages": [
+        {
+          "path": "userList/userList",
+          "style": {
+            "navigationBarTitleText": "用户列表"
+          }
+        },
+        {
+          "path": "newUser/newUser",
+          "style": {
+            "navigationBarTitleText": "新增用户"
+          }
+        }
+      ]
     }
   ],
   "globalStyle": {
