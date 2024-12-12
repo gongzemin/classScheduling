@@ -2,15 +2,9 @@
   <view class="p-20 course-wrapper">
     <view v-for="(course, index) in dayCourses" :key="index" class="mb-20">
       <course-card
-        :courseName="course.courseType"
-        :teacherName="course.courseTeacherName"
-        :courseLevel="course.courseLevel"
-        :courseTime="course.time"
-        :difficulty="course.difficulty"
-        :teacherImage="course.courseTeacherPic"
-        :courseId="course._id"
-        :students="course.students"
-        @refreshList="fetchCourses()" />
+        :courseObj="course"
+        @refreshList="refresh"
+        :clickDate="clickDate" />
     </view>
     <view class="add" v-if="isAdmin" @click="goNew">
       <uni-icons type="plusempty" size="40" color="#fff"></uni-icons>
@@ -20,137 +14,114 @@
 
 <script setup>
 import { onMounted, ref, watch, computed } from "vue";
+
 import courseCard from "./course-card.vue";
 import { formatTimestampToHHMM } from "../../common/util";
+
 const props = defineProps({
-  dayOfTheWeek: String,
+  dayOfTheWeek: String, // 当前展示的星期
+  clickDate: Date, // 点击的日期对象
 });
 
+// 数据库引用
 const db = uniCloud.database();
-// 用于保存当前需要展示的课程
-const dayCourses = ref([]);
 
-const storedUserInfo = ref(uni.getStorageSync("userInfo"));
-const isAdmin = computed(() =>
-  storedUserInfo.value?.role === "superAdmin" ? true : false
-);
-const courses = [
-  {
-    name: "音乐创作",
-    teacher: "霉霉(Taylor Swift)",
-    time: "19:00-20:30",
-    difficulty: 4,
-    dayOfTheWeek: "周三",
-    teacherImage:
-      "https://mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78.cdn.bspapp.com/teachers/课程预约卡片/taylorSwift.jpg",
-    students: [
-      {
-        avatar:
-          "https://mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78.cdn.bspapp.com/teachers/课程预约卡片/steve-jobs-visionary-or-perfectionist.jpeg",
-      },
-      {
-        avatar:
-          "https://mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78.cdn.bspapp.com/teachers/课程预约卡片/matthew-mcconaughey-portrait.jpg",
-      },
-      {
-        avatar:
-          "https://mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78.cdn.bspapp.com/teachers/课程预约卡片/lana del rey.png",
-      },
-      {
-        avatar:
-          "https://mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78.cdn.bspapp.com/teachers/课程预约卡片/kingOfPop.jpg",
-      },
-      {
-        avatar:
-          "https://mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78.cdn.bspapp.com/teachers/课程预约卡片/gongQiJun.jpg",
-      },
-      {
-        avatar:
-          "https://mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78.cdn.bspapp.com/teachers/课程预约卡片/fayeWong.jpg",
-      },
-      {
-        avatar:
-          "https://mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78.cdn.bspapp.com/teachers/课程预约卡片/aBing.jpg",
-      },
-      {
-        avatar:
-          "https://mp-0f5589ad-8ec0-443d-bfcc-a8f38857fc78.cdn.bspapp.com/teachers/课程预约卡片/IngridBergman.jpg",
-      },
-    ],
-  },
-];
+// 状态管理
+const courseList = ref([]); // 所有课程数据
+const dayCourses = ref([]); // 当前需要展示的课程
+const storedUserInfo = ref(uni.getStorageSync("userInfo")); // 用户信息
 
-const courseList = ref([]);
+// 计算属性：判断是否为管理员
+const isAdmin = computed(() => storedUserInfo.value?.role === "superAdmin");
 
-// 将数字星期几转换为中文格式的"周几"
+// 工具函数：将数字星期几转换为中文格式的"周几"
 const getWeekdayInChinese = (dayIndex) => {
   const days = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
   return days[dayIndex];
 };
 
+// 工具函数：格式化课程时间
+const formatCourseTime = (startTime, endTime) =>
+  `${formatTimestampToHHMM(startTime)}-${formatTimestampToHHMM(endTime)}`;
+
+// 数据获取：从云数据库获取课程列表
 const fetchCourses = async () => {
   try {
-    const res = await db.collection("class-schedule").get();
-    uni.hideLoading();
+    const res = await db
+      .collection("class-schedule")
+      .orderBy("startTime", "asc")
+      .get();
     if (res.result?.errCode === 0) {
-      courseList.value = res.result.data;
+      courseList.value = res.result.data || [];
       console.log("Fetched courses:", courseList.value);
     } else {
       console.error("Failed to fetch courses:", res.result?.errMsg);
     }
   } catch (error) {
-    uni.hideLoading();
     console.error("Error fetching courses:", error);
+  } finally {
+    uni.hideLoading();
   }
 };
 
-const filterCoursesByDay = (day) => {
-  return courseList.value.filter((course) => course.day === day);
-};
+// 数据过滤：根据指定的星期过滤课程
+const filterCoursesByDay = (day) =>
+  courseList.value.filter((course) => course.day === day);
 
-const updateDayCourses = async (dayOfWeek) => {
+// 数据更新：更新需要展示的课程
+const updateDayCourses = async (dayOfWeek, forceUpdate = false) => {
   const targetDay = dayOfWeek || getWeekdayInChinese(new Date().getDay());
   console.log("Target day:", targetDay);
 
-  if (!courseList.value.length) {
-    console.log("Course list is empty, fetching data...");
+  // 如果没有课程数据或者需要强制刷新，则重新获取数据
+  if (!courseList.value.length || forceUpdate) {
+    console.log("Fetching courses data...");
     await fetchCourses();
   }
-  console.log("courses.value", courseList.value);
 
-  let course = filterCoursesByDay(targetDay);
-  course.forEach((item) => {
-    const formattedStartTime = formatTimestampToHHMM(item.startTime);
-    const formattedEndTime = formatTimestampToHHMM(item.endTime);
-    item.time = `${formattedStartTime}-${formattedEndTime}`;
-  });
-  console.log("courseList1", course);
-  dayCourses.value = course;
-  console.log("Filtered day courses:", dayCourses.value);
+  if (!courseList.value.length) {
+    console.warn("No course data available.");
+    dayCourses.value = []; // 清空展示课程
+    return;
+  }
+
+  // 筛选并格式化课程数据
+  dayCourses.value = filterCoursesByDay(targetDay).map((item) => ({
+    ...item,
+    time: formatCourseTime(item.startTime, item.endTime),
+  }));
+
+  console.log("Updated day courses:", dayCourses.value);
 };
 
+// 页面跳转：前往新增课程页面
 const goNew = () => {
-  uni.navigateTo({
-    url: "/pages-courses/newCourse/newCourse",
-  });
+  uni.navigateTo({ url: "/pages-courses/newCourse/newCourse" });
 };
 
-// 监听 props 的 dayOfTheWeek 变化
+// 刷新课程列表
+const refresh = () => {
+  console.log("Refresh triggered for:", props.dayOfTheWeek);
+  uni.showLoading({ mask: true });
+  updateDayCourses(props.dayOfTheWeek, true); // 强制刷新课程数据
+};
+
+uni.$on("refreshList", () => {
+  uni.showLoading({ mask: false });
+  updateDayCourses(props.dayOfTheWeek, true); // 不强制刷新
+});
+
+// 挂载时初始化
+onMounted(() => {
+  uni.showLoading({ mask: false });
+  updateDayCourses(props.dayOfTheWeek, true); // 不强制刷新
+});
+
+// 监听：props.dayOfTheWeek 变化时更新课程
 watch(
   () => props.dayOfTheWeek,
-  (newDayOfTheWeek) => {
-    updateDayCourses(newDayOfTheWeek);
-  }
+  (newDayOfTheWeek) => updateDayCourses(newDayOfTheWeek)
 );
-
-// 在组件挂载时，计算今天的课程
-onMounted(() => {
-  uni.showLoading({
-    // title: "正在加载数据...",
-    mask: true,
-  });
-  updateDayCourses(props.dayOfTheWeek);
-});
 </script>
 
 <style scoped lang="scss">
@@ -160,7 +131,7 @@ onMounted(() => {
     height: 140rpx;
     background-color: #74dbef;
     border-radius: 50%;
-    position: absolute;
+    position: fixed;
     bottom: 1%;
     right: 3%;
     display: flex;

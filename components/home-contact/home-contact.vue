@@ -6,7 +6,7 @@
         <view class="info">
           <view class="label">电话:</view>
           <text class="content phone" @click="makePhoneCall">
-            {{ studioInfo.phone }}
+            {{ encryptMobile }}
           </text>
         </view>
 
@@ -30,13 +30,20 @@
 
 <script setup>
 import Title from "../Title.vue";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 // import { showToast } from "@dcloudio/uni-app";
 
 const props = defineProps({
   studioInfo: Object,
 });
 
+const encryptMobile = computed(() => {
+  const phone = props.studioInfo?.phone;
+  if (typeof phone === "string" && phone.length === 11) {
+    return phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2");
+  }
+  return "";
+});
 // Navigate to the built-in map with the address
 const openMap = () => {
   uni.navigateTo({

@@ -124,10 +124,12 @@ const getWeekday = (date: Date): string => {
  * @param {Date} date - 被点击的日期
  */
 const handleDayClick = (date: Date) => {
+  console.log("date-00000000---", date);
   const weekday = getWeekday(date); // 获取点击的日期对应的周几
   selectedDay.value = date; // 更新选中的日期
   console.log("weekday", weekday);
-  emits("dayClick", weekday); // 仅传递周几作为事件参数
+  // uni.$emit("dayClick", date.toLocaleDateString());
+  emits("dayClick", { weekday, date }); // 仅传递周几作为事件参数
 };
 
 /**

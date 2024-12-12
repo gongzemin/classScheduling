@@ -1,5 +1,6 @@
 <template>
   <view class="p-20 course-wrapper">
+    <button open-type="share"></button>
     <view v-for="(course, index) in dayCourses" :key="index" class="mb-20">
       <course-card
         :courseName="course.courseType"
@@ -17,6 +18,7 @@
 import { onMounted, ref, watch } from "vue";
 import courseCard from "../../components/reserve-courses/course-card.vue";
 import { formatTimestampToHHMM } from "../../common/util";
+import { onLoad } from "@dcloudio/uni-app";
 const props = defineProps({
   dayOfTheWeek: String,
 });
@@ -98,6 +100,18 @@ const filterCoursesByDay = (day) => {
   return courseList.value.filter((course) => course.day === day);
 };
 
+onLoad(() => {
+  uni.showShareMenu({
+    withShareTicket: true,
+    menus: ["shareAppMessage", "shareTimeline"],
+    success() {
+      console.log("分享菜单显示成功");
+    },
+    fail(err) {
+      console.error("分享菜单显示失败", err);
+    },
+  });
+});
 const updateDayCourses = async (dayOfWeek) => {
   const targetDay = dayOfWeek || getWeekdayInChinese(new Date().getDay());
   console.log("Target day:", targetDay);
@@ -134,20 +148,22 @@ onMounted(() => {
     mask: true,
   });
   updateDayCourses(props.dayOfTheWeek);
+  console.log("onAddToFavorites(3333)000", typeof getCurrentPages);
 
   if (typeof getCurrentPages === "function" && getCurrentPages().length) {
+    console.log("onAddToFavorites(3333)");
     wx.showShareMenu();
     const currentPage = getCurrentPages().slice(-1)[0];
     currentPage.onShareAppMessage = () => {
       return {
-        title: "Pick Star 娱乐",
+        title: "Pick Dance Studio",
         path: "/pages/reserve/reserve",
         // imageUrl: "../../static/images/share.jpg",
       };
     };
     currentPage.onShareTimeline = () => {
       return {
-        title: "Pick Star 娱乐",
+        title: "Pick Dance Studio",
         // imageUrl: "../../static/images/moment.jpg",
       };
     };

@@ -16,11 +16,11 @@
 <script setup>
 import { ref } from "vue";
 const menuItems = ref([
-  { label: "课表", path: "my-reservations", icon: "calendar" },
+  // { label: "课表", path: "my-reservations", icon: "calendar" },
   { label: "作品集", path: "course-records", icon: "videocam" },
   { label: "舞室相册", path: "course-records", icon: "image" },
-  { label: "租教室", path: "membership-cards", icon: "info" },
-  { label: "演出合作", path: "membership-cards", icon: "info" },
+  { label: "租教室", path: "membership-cards", icon: "calendar" },
+  { label: "演出合作", path: "membership-cards", icon: "flag" },
   { label: "优惠", path: "course-records", icon: "gift" },
   { label: "品牌介绍", path: "membership-cards", icon: "info" },
 ]);

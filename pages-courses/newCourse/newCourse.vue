@@ -220,6 +220,8 @@ const courseTypes = ref([
   { value: "Hiphop", text: "Hiphop" },
   { value: "Jazz", text: "Jazz" },
   { value: "编舞", text: "编舞" },
+  { value: "Heel", text: "Heel" },
+  { value: "国风", text: "国风" },
 ]);
 const courseLevels = ref([
   { value: "入门", text: "入门" },
@@ -335,7 +337,7 @@ const submitForm = () => {
   formRef.value
     .validate()
     .then(async (res) => {
-      console.log("success", res);
+      console.log("success", res, queryId.value);
       if (!formData.selectedTeacherName) {
         // 如果没有选择教师，检查名称和图片是否已填写
         if (!formData.courseTeacherName || !formData.courseTeacherPic) {
@@ -361,8 +363,11 @@ const submitForm = () => {
           ? formData.selectedTeacherPic
           : formData.courseTeacherPic, // 教师图片
       };
+      uni.showLoading({
+        mask: true,
+      });
       let result;
-      if (queryId) {
+      if (queryId.value) {
         // 编辑操作
         result = await collection.doc(queryId.value).update(dataToSave);
         console.log("result----update");
@@ -374,7 +379,7 @@ const submitForm = () => {
       } else {
         result = await collection.add(dataToSave);
       }
-
+      uni.hideLoading();
       if (!formData.selectedTeacherName) {
         const collectionTeacher = db.collection("teachers"); // 替换为你的云数据库集合名称
         const resu = await collectionTeacher.add({
@@ -389,10 +394,12 @@ const submitForm = () => {
         title: "提交成功",
         icon: "success",
       });
-
       // 清空表单数据
       resetForm();
-      // emit("refreshList");
+      uni.$emit("refreshList", { msg: "更新列表" });
+      uni.switchTab({
+        url: "/pages/reserve/reserve",
+      });
     })
     .catch((err) => {
       console.error("提交失败", err);

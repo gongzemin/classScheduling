@@ -3,18 +3,18 @@
     <!-- 背景展示老师图片 -->
     <view
       class="course-background"
-      :style="{ backgroundImage: `url(${teacherImage})` }">
+      :style="{ backgroundImage: `url(${courseObj.courseTeacherPic})` }">
       <!-- 透明蒙版 -->
       <view class="overlay"></view>
       <!-- 课程内容 -->
       <view class="course-info">
         <view class="course-time">
-          {{ courseTime }}
+          {{ courseObj.time }}
         </view>
         <view class="course-name flex items-center">
-          {{ courseName }}
+          {{ courseObj.courseType }}
           <view class="flex items-center ml-20 mt-5">
-            <view class="course-level">{{ courseLevel }}</view>
+            <view class="course-level">{{ courseObj.courseLevel }}</view>
             <view class="course-difficulty">
               <!-- <view class="label">难度:</view> -->
               <view class="stars">
@@ -28,7 +28,7 @@
         </view>
 
         <view class="teacher-name mt-40">
-          <view>{{ teacherName }}</view>
+          <view>{{ courseObj.courseTeacherName }}</view>
         </view>
         <view class="reserve-static">
           已预约 {{ bookInfo.count }}/{{ bookInfo.capacity }}
@@ -46,11 +46,21 @@
       </view>
 
       <!-- 预约按钮 -->
-      <button class="reserve-btn" @click="bookCourse">预约</button>
+      <reserve-button
+        :time="courseObj.time"
+        :clickDate="clickDate"
+        class="reserve-btn" />
+
       <!-- 管理员操作按钮 -->
       <view v-if="isAdmin">
-        <button class="delete-btn" @click="deleteCourse">删除</button>
-        <button class="edit-btn" @click="editCourse">修改</button>
+        <uni-icons
+          type="more-filled"
+          class="more"
+          size="40"
+          color="rgba(255,255,255,0.5)"
+          @click="showMore"></uni-icons>
+        <!-- <button class="delete-btn" @click="deleteCourse">删除</button>
+        <button class="edit-btn" @click="editCourse">修改</button> -->
       </view>
     </view>
   </view>
@@ -58,16 +68,16 @@
 
 <script setup>
 import { ref, computed, reactive } from "vue";
+import reserveButton from "./reserve-button.vue";
+
 const props = defineProps({
-  courseName: String,
-  teacherName: String,
-  courseTime: String,
-  courseLevel: String,
-  difficulty: Number, // 课程难度：1-5
-  teacherImage: String,
-  courseId: String,
-  students: Array, // 学生 avatar 列表
+  courseObj: {
+    type: Object,
+    default: () => {},
+  },
+  clickDate: Date, // 点击的日期对象
 });
+const students = ref([]);
 
 const db = uniCloud.database();
 const userInfo = uni.getStorageSync("userInfo");
@@ -78,13 +88,12 @@ const bookInfo = reactive({
   count: 0,
   capacity: 45,
 });
-const students = [];
 const starCount = computed(() => {
-  if (props.courseLevel === "入门") {
+  if (props.courseObj.courseLevel === "入门") {
     return 1;
-  } else if (props.courseLevel === "基础") {
+  } else if (props.courseObj.courseLevel === "基础") {
     return 2;
-  } else if (props.courseLevel === "进阶") {
+  } else if (props.courseObj.courseLevel === "进阶") {
     return 3;
   }
 });
@@ -128,7 +137,24 @@ function deleteCourse() {
 
 const editCourse = () => {
   uni.navigateTo({
-    url: `/pages-courses/newCourse/newCourse?id=${props.courseId}`,
+    url: `/pages-courses/newCourse/newCourse?id=${props.courseObj._id}`,
+  });
+};
+
+const showMore = () => {
+  uni.showActionSheet({
+    itemList: ["编辑", "删除"],
+    success: function (res) {
+      if (res.tapIndex === 0) {
+        editCourse();
+      } else if (res.tapIndex === 1) {
+        deleteCourse();
+      }
+      console.log("选中了第" + (res.tapIndex + 1) + "个按钮");
+    },
+    fail: function (res) {
+      console.log(res.errMsg);
+    },
   });
 };
 
@@ -138,9 +164,9 @@ async function deleteData() {
   const userInfo = uni.getStorageSync("userInfo");
   console.log("adminnnnnn00000-");
   if (userInfo && userInfo.role === "superAdmin") {
-    console.log("adminnnnnn", props.courseId, userInfo.userId);
+    console.log("adminnnnnn", userInfo.userId);
     db.collection("class-schedule")
-      .doc(props.courseId)
+      .doc(props.courseObj._id)
       .remove()
       .then((res) => {
         uni.showToast({
@@ -186,6 +212,7 @@ async function deleteData() {
   border-radius: 10px;
   overflow: hidden;
   height: 200px;
+  margin-top: 40rpx;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 
   .course-background {
@@ -225,13 +252,13 @@ async function deleteData() {
       justify-content: center;
       flex: 1;
       .course-time {
-        font-size: 16px;
+        font-size: 18px;
       }
       .teacher-name {
         font-size: 16px;
       }
       .course-name {
-        font-size: 16px;
+        font-size: 19px;
       }
       .course-level {
         font-size: 11px;
@@ -292,16 +319,17 @@ async function deleteData() {
       right: 25rpx;
       top: 50%;
       transform: translateY(-50%);
-      background-color: #ff6600;
-      border: none;
-      color: #fff;
-      font-size: 16px;
-      text-align: center;
-      border-radius: 5px;
       z-index: 2; /* 确保按钮在蒙版上方 */
     }
 
     /* 管理员操作按钮样式 */
+    .more {
+      position: absolute;
+      top: 10rpx;
+      right: 50rpx;
+      z-index: 3;
+      color: rgba(255, 255, 255, 0.5);
+    }
     .edit-btn,
     .delete-btn {
       position: absolute;
