@@ -114,13 +114,10 @@ onLoad(() => {
 });
 const updateDayCourses = async (dayOfWeek) => {
   const targetDay = dayOfWeek || getWeekdayInChinese(new Date().getDay());
-  console.log("Target day:", targetDay);
 
   if (!courseList.value.length) {
-    console.log("Course list is empty, fetching data...");
     await fetchCourses();
   }
-  console.log("courses.value", courseList.value);
 
   let courseList = filterCoursesByDay(targetDay);
   courseList.forEach((item) => {
@@ -128,7 +125,7 @@ const updateDayCourses = async (dayOfWeek) => {
     const formattedEndTime = formatTimestampToHHMM(item.endTime);
     item.time = `${formattedStartTime}-${formattedEndTime}`;
   });
-  console.log("courseList1", courseList);
+  console.log("courseList1111", courseList);
   dayCourses.value = courseList;
 
   console.log("Filtered day courses:", dayCourses.value);
@@ -148,7 +145,7 @@ onMounted(() => {
     mask: true,
   });
   updateDayCourses(props.dayOfTheWeek);
-  console.log("onAddToFavorites(3333)000", typeof getCurrentPages);
+  // console.log("onAddToFavorites(3333)000", typeof getCurrentPages);
 
   if (typeof getCurrentPages === "function" && getCurrentPages().length) {
     console.log("onAddToFavorites(3333)");

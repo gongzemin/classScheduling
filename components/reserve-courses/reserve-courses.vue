@@ -2,7 +2,7 @@
   <view class="p-20 course-wrapper">
     <view v-for="(course, index) in dayCourses" :key="index" class="mb-20">
       <course-card
-        :courseObj="course"
+        :courseInfo="course"
         @refreshList="refresh"
         :clickDate="clickDate" />
     </view>
@@ -16,7 +16,7 @@
 import { onMounted, ref, watch, computed } from "vue";
 
 import courseCard from "./course-card.vue";
-import { formatTimestampToHHMM } from "../../common/util";
+import { formatCourseTime } from "../../common/util";
 
 const props = defineProps({
   dayOfTheWeek: String, // 当前展示的星期
@@ -40,17 +40,11 @@ const getWeekdayInChinese = (dayIndex) => {
   return days[dayIndex];
 };
 
-// 工具函数：格式化课程时间
-const formatCourseTime = (startTime, endTime) =>
-  `${formatTimestampToHHMM(startTime)}-${formatTimestampToHHMM(endTime)}`;
-
 // 数据获取：从云数据库获取课程列表
 const fetchCourses = async () => {
+  //     .orderBy("startTime", "asc")
   try {
-    const res = await db
-      .collection("class-schedule")
-      .orderBy("startTime", "asc")
-      .get();
+    const res = await db.collection("class-schedule").get();
     if (res.result?.errCode === 0) {
       courseList.value = res.result.data || [];
       console.log("Fetched courses:", courseList.value);
@@ -67,6 +61,26 @@ const fetchCourses = async () => {
 // 数据过滤：根据指定的星期过滤课程
 const filterCoursesByDay = (day) =>
   courseList.value.filter((course) => course.day === day);
+
+const sortedTimes = () => {
+  dayCourses.value.sort((a, b) => {
+    // 提取起始时间（"HH:mm"格式），并转为分钟数（从00:00开始的分钟数）
+    const timeToMinutes = (timeStr) => {
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      return hours * 60 + minutes;
+    };
+
+    // 提取并比较起始时间
+    const startA = timeToMinutes(a.time.split("-")[0]);
+    const startB = timeToMinutes(b.time.split("-")[0]);
+
+    return startA - startB; // 升序排序
+  });
+  // 预约用户倒序排列
+  dayCourses.value.forEach((item) => {
+    item.reservedUsers && item.reservedUsers.reverse();
+  });
+};
 
 // 数据更新：更新需要展示的课程
 const updateDayCourses = async (dayOfWeek, forceUpdate = false) => {
@@ -90,6 +104,14 @@ const updateDayCourses = async (dayOfWeek, forceUpdate = false) => {
     ...item,
     time: formatCourseTime(item.startTime, item.endTime),
   }));
+  sortedTimes();
+  dayCourses.value.forEach((item) => {
+    item.isReserved =
+      item.reservedUsers &&
+      item.reservedUsers.some(
+        (user) => user.user_id === storedUserInfo.value.userId
+      );
+  });
 
   console.log("Updated day courses:", dayCourses.value);
 };
@@ -107,14 +129,15 @@ const refresh = () => {
 };
 
 uni.$on("refreshList", () => {
+  console.log("这个uni.on起作用吗");
   uni.showLoading({ mask: false });
-  updateDayCourses(props.dayOfTheWeek, true); // 不强制刷新
+  updateDayCourses(props.dayOfTheWeek, true); // 强制刷新
 });
 
 // 挂载时初始化
 onMounted(() => {
   uni.showLoading({ mask: false });
-  updateDayCourses(props.dayOfTheWeek, true); // 不强制刷新
+  updateDayCourses(props.dayOfTheWeek, true); // 强制刷新
 });
 
 // 监听：props.dayOfTheWeek 变化时更新课程

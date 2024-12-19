@@ -74,6 +74,19 @@
         </picker>
       </uni-forms-item>
 
+      <!-- 课程最多可上课人数 -->
+      <uni-forms-item
+        class="form-item"
+        name="capacity"
+        label="请输入最多上课人数"
+        required>
+        <input
+          class="form-input capacity"
+          type="number"
+          placeholder=""
+          v-model.number="formData.capacity" />
+      </uni-forms-item>
+
       <!-- 单选框组：选择已有老师 or 新增老师 -->
       <uni-forms-item name="addTeacherType" label="上课老师选项" required>
         <radio-group name="group1" @change="onaddTeacherTypeChange">
@@ -163,6 +176,7 @@ const formData = reactive({
   endTime: null,
   courseType: "",
   courseLevel: "",
+  capacity: "",
   addTeacherType: null, // 默认选项为已有老师
   selectedTeacherName: "",
   selectedTeacherPic: "",
@@ -187,6 +201,9 @@ const rules = {
   },
   courseLevel: {
     rules: [{ required: true, errorMessage: "请选择课程种类" }],
+  },
+  capacity: {
+    rules: [{ required: true, errorMessage: "请输入课程最多上课人数" }],
   },
   addTeacherType: {
     rules: [{ required: true, errorMessage: "请选择上课老师选项" }],
@@ -220,7 +237,7 @@ const courseTypes = ref([
   { value: "Hiphop", text: "Hiphop" },
   { value: "Jazz", text: "Jazz" },
   { value: "编舞", text: "编舞" },
-  { value: "Heel", text: "Heel" },
+  { value: "Heels", text: "Heels" },
   { value: "国风", text: "国风" },
 ]);
 const courseLevels = ref([
@@ -352,11 +369,13 @@ const submitForm = () => {
       const collection = db.collection("class-schedule"); // 替换为你的云数据库集合名称
 
       const dataToSave = {
+        addTeacherType: formData.addTeacherType,
         day: formData.day,
         startTime: getTimestamp(formData.startTime),
         endTime: getTimestamp(formData.endTime),
         courseType: formData.courseType,
         courseLevel: formData.courseLevel,
+        capacity: formData.capacity,
         courseTeacherName:
           formData.selectedTeacherName || formData.courseTeacherName, // 如果未选择下拉框中的教师，使用手动输入的教师名
         courseTeacherPic: formData.selectedTeacherName
@@ -370,8 +389,8 @@ const submitForm = () => {
       if (queryId.value) {
         // 编辑操作
         result = await collection.doc(queryId.value).update(dataToSave);
-        console.log("result----update");
-        if (result.updated === 1) {
+        console.log("result----update", result);
+        if (result.result.updated === 1) {
           console.log("更新成功");
         } else {
           console.error("未找到对应记录或更新失败");
@@ -460,7 +479,7 @@ onLoad((e) => {
   queryId.value = e.id;
   if (e.id) {
     uni.showLoading({
-      title: "加载中...",
+      // title: "...",
     });
     getDetail();
     uni.setNavigationBarTitle({
@@ -507,7 +526,11 @@ onLoad((e) => {
     border: 1px solid #ccc;
     border-radius: 4px;
     background: #fff;
-    height: 35rpx;
+    height: 65rpx;
+  }
+  .capacity {
+    padding: 0px;
+    padding-left: 8px;
   }
 
   .teacher-preview {

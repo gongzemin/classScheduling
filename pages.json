@@ -78,6 +78,27 @@
           }
         }
       ]
+    },
+    {
+      "root": "pages-studio",
+      "pages": [
+        {
+          "path": "classroom/addClassroom",
+          "style": {
+            "navigationBarTitleText": "新增教室"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages-reserve",
+      "pages": [{
+      	"path" : "reserveDetail/reserveDetail",
+      	"style" : 
+      	{
+      		"navigationBarTitleText" : "预约详情"
+      	}
+      }]
     }
   ],
   "globalStyle": {

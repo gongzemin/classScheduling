@@ -1,21 +1,26 @@
 <template>
-  <div>
+  <view>
+    <view v-if="buttonStatus === '已结束'" class="reserve-btn">
+      {{ buttonStatus }}
+    </view>
+    <!-- :disabled="buttonStatus !== '预约' && buttonStatus !== '进行中'" -->
     <button
+      v-else
       class="reserve-btn"
-      @click="handleClick"
       :class="{
         active: buttonStatus === '预约',
         ing: buttonStatus === '进行中',
-      }"
-      :disabled="buttonStatus !== '预约'">
+      }">
       {{ buttonStatus }}
     </button>
-  </div>
+  </view>
 </template>
 
 <script setup>
 import { ref, computed } from "vue";
+import { parseTimeToMinutes } from "../../common/util";
 
+const userInfo = uni.getStorageSync("userInfo");
 // Props 接收
 const props = defineProps({
   time: {
@@ -26,6 +31,9 @@ const props = defineProps({
   clickDate: {
     type: Date, // 按钮对应的日期
     required: true,
+  },
+  classId: {
+    type: String, // 格式为 HH:mm-HH:mm
   },
 });
 
@@ -42,19 +50,11 @@ const today12PM = computed(() => {
   return date;
 });
 
-// 时间字符串转为分钟数
-const parseTimeToMinutes = (time) => {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-};
-
 // 拆分开始时间和结束时间
 const [startTime, endTime] = props.time.split("-").map(parseTimeToMinutes);
-// console.log("startTime,", startTime, endTime);
 
 // 获取按钮状态
 const buttonStatus = computed(() => {
-  console.log("props.clickDate", props.clickDate);
   const currentMinutes = now.value.getHours() * 60 + now.value.getMinutes(); // 当前时间分钟数
   const diffDays = Math.floor(
     (props.clickDate.getTime() - today.value.getTime()) / (1000 * 60 * 60 * 24)
@@ -73,17 +73,27 @@ const buttonStatus = computed(() => {
     return "预约"; // 今天且尚未开始
   }
   if (diffDays > 0 && diffDays <= 2) {
-    if (diffDays === 2 && now.value >= today12PM.value) {
-      return "预约"; // 今天中午 12 点后可预约后天的课程
+    if (diffDays === 2) {
+      // 只有当前时间超过今天的中午 12 点，才可以预约后天的课程
+      if (now.value >= today12PM.value) {
+        return "预约";
+      } else {
+        return "暂未开放预约"; // 今天还没到中午 12 点，不允许预约后天课程
+      }
     }
-    return "预约"; // 今天后的两天内
+    return "预约"; // 今天后的 1 天内的课程直接允许预约
   }
   return "暂未开放预约"; // 超过两天后的日期
 });
 
 // 点击事件
-const handleClick = () => {
-  alert(`按钮状态: ${buttonStatus.value}`);
+const bookCourse = async () => {
+  // toISOString() 的输出示例：2024-12-17T06:55:00.000Z
+  const formattedDate = props.clickDate.toISOString(); // 转换为 ISO 格式
+  // 执行预约逻辑
+  uni.navigateTo({
+    url: `/pages-reserve/reserveDetail/reserveDetail?id=${props.classId}&date=${formattedDate}&time=${props.time}`,
+  });
 };
 </script>
 

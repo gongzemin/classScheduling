@@ -124,7 +124,7 @@ const getWeekday = (date: Date): string => {
  * @param {Date} date - 被点击的日期
  */
 const handleDayClick = (date: Date) => {
-  console.log("date-00000000---", date);
+  console.log("date-00000000---", date, date instanceof Date);
   const weekday = getWeekday(date); // 获取点击的日期对应的周几
   selectedDay.value = date; // 更新选中的日期
   console.log("weekday", weekday);

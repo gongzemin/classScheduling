@@ -1,20 +1,20 @@
 <template>
-  <view class="course-card">
+  <view class="course-card" @click="goDetail">
     <!-- 背景展示老师图片 -->
     <view
       class="course-background"
-      :style="{ backgroundImage: `url(${courseObj.courseTeacherPic})` }">
+      :style="{ backgroundImage: `url(${courseInfo.courseTeacherPic})` }">
       <!-- 透明蒙版 -->
       <view class="overlay"></view>
       <!-- 课程内容 -->
       <view class="course-info">
         <view class="course-time">
-          {{ courseObj.time }}
+          {{ courseInfo.time }}
         </view>
         <view class="course-name flex items-center">
-          {{ courseObj.courseType }}
+          {{ courseInfo.courseType }}
           <view class="flex items-center ml-20 mt-5">
-            <view class="course-level">{{ courseObj.courseLevel }}</view>
+            <view class="course-level">{{ courseInfo.courseLevel }}</view>
             <view class="course-difficulty">
               <!-- <view class="label">难度:</view> -->
               <view class="stars">
@@ -28,39 +28,40 @@
         </view>
 
         <view class="teacher-name mt-40">
-          <view>{{ courseObj.courseTeacherName }}</view>
+          <view>{{ courseInfo.courseTeacherName }}</view>
         </view>
         <view class="reserve-static">
-          已预约 {{ bookInfo.count }}/{{ bookInfo.capacity }}
+          已预约 {{ courseInfo?.reservedUsers?.length || 0 }}/{{
+            courseInfo?.capacity || 20
+          }}
         </view>
 
-        <!-- 学生头像列表 -->
-        <view class="student-avatar-list" v-if="students.length">
-          <view
-            v-for="(student, index) in starCount"
-            :key="index"
-            class="avatar-wrapper">
-            <image :src="student.avatar" class="avatar" />
+        <!-- 学生头像列表   {{ courseInfo.reservedUsers }}TODO 后面可以不用写 courseInfo.reservedUsers &&  -->
+        <view class="pt-20 flex" v-if="courseInfo.reservedUsers?.length">
+          <reserve-user-list
+            :reservedUsers="courseInfo.reservedUsers.slice(0, 9)" />
+          <view v-if="courseInfo.reservedUsers.length > 9" class="text-gray">
+            ...
           </view>
         </view>
       </view>
 
+      <view v-if="courseInfo.isReserved" class="reserve-btn">已预约</view>
       <!-- 预约按钮 -->
       <reserve-button
-        :time="courseObj.time"
+        :time="courseInfo.time"
         :clickDate="clickDate"
-        class="reserve-btn" />
+        :classId="courseInfo._id"
+        class="reserve-btn"
+        v-else />
 
       <!-- 管理员操作按钮 -->
-      <view v-if="isAdmin">
+      <view v-if="isAdmin" @click.stop="showMore">
         <uni-icons
           type="more-filled"
           class="more"
           size="40"
-          color="rgba(255,255,255,0.5)"
-          @click="showMore"></uni-icons>
-        <!-- <button class="delete-btn" @click="deleteCourse">删除</button>
-        <button class="edit-btn" @click="editCourse">修改</button> -->
+          color="rgba(255,255,255,0.5)"></uni-icons>
       </view>
     </view>
   </view>
@@ -68,16 +69,111 @@
 
 <script setup>
 import { ref, computed, reactive } from "vue";
-import reserveButton from "./reserve-button.vue";
+import reserveUserList from "./reserve-user-list.vue";
+import reserveButton from "./card-reserve-button.vue";
 
+const tt = [
+  {
+    user_id: "6763d1654b9247079917bee5",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
+  },
+  {
+    user_id: "67526d0789bd27450be85c4e",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
+  },
+  {
+    user_id: "6763d1654b9247079917bee5",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
+  },
+  {
+    user_id: "67526d0789bd27450be85c4e",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
+  },
+  {
+    user_id: "6763d1654b9247079917bee5",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
+  },
+  {
+    user_id: "67526d0789bd27450be85c4e",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
+  },
+  {
+    user_id: "6763d1654b9247079917bee5",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
+  },
+  {
+    user_id: "67526d0789bd27450be85c4e",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
+  },
+  {
+    user_id: "6763d1654b9247079917bee5",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
+  },
+  {
+    user_id: "67526d0789bd27450be85c4e",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
+  },
+  {
+    user_id: "6763d1654b9247079917bee5",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
+  },
+  {
+    user_id: "67526d0789bd27450be85c4e",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
+  },
+  {
+    user_id: "6763d1654b9247079917bee5",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
+  },
+  {
+    user_id: "67526d0789bd27450be85c4e",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
+  },
+  {
+    user_id: "6763d1654b9247079917bee5",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
+  },
+  {
+    user_id: "67526d0789bd27450be85c4e",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
+  },
+  {
+    user_id: "6763d1654b9247079917bee5",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
+  },
+  {
+    user_id: "67526d0789bd27450be85c4e",
+    avatar:
+      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
+  },
+];
 const props = defineProps({
-  courseObj: {
+  courseInfo: {
     type: Object,
     default: () => {},
   },
   clickDate: Date, // 点击的日期对象
 });
+
 const students = ref([]);
+let reserveUserArr = ref([]);
 
 const db = uniCloud.database();
 const userInfo = uni.getStorageSync("userInfo");
@@ -89,11 +185,11 @@ const bookInfo = reactive({
   capacity: 45,
 });
 const starCount = computed(() => {
-  if (props.courseObj.courseLevel === "入门") {
+  if (props.courseInfo.courseLevel === "入门") {
     return 1;
-  } else if (props.courseObj.courseLevel === "基础") {
+  } else if (props.courseInfo.courseLevel === "基础") {
     return 2;
-  } else if (props.courseObj.courseLevel === "进阶") {
+  } else if (props.courseInfo.courseLevel === "进阶") {
     return 3;
   }
 });
@@ -103,20 +199,9 @@ const isAdmin = computed(() =>
   storedUserInfo.value?.role === "superAdmin" ? true : false
 );
 
-const bookCourse = async (props) => {
-  console.log("userInfo", userInfo);
-  if (!userInfo || (userInfo && !userInfo.mobile)) {
-    uni.navigateTo({
-      url: "/pages/login/login",
-    });
-  } else {
-  }
-  // const { success } = await cloud.callFunction('bookCourse', { userId, courseId: co})
-  // uni.showToast({
-  //   title: "已预约",
-  //   icon: "success",
-  // });
-};
+function getAvatar(item) {
+  return item.avatar || "../../static/images/defAvatar.png";
+}
 
 // 删除前确认
 function deleteCourse() {
@@ -137,7 +222,7 @@ function deleteCourse() {
 
 const editCourse = () => {
   uni.navigateTo({
-    url: `/pages-courses/newCourse/newCourse?id=${props.courseObj._id}`,
+    url: `/pages-courses/newCourse/newCourse?id=${props.courseInfo._id}`,
   });
 };
 
@@ -162,11 +247,9 @@ const showMore = () => {
 // 前端调用云函数进行删除
 async function deleteData() {
   const userInfo = uni.getStorageSync("userInfo");
-  console.log("adminnnnnn00000-");
   if (userInfo && userInfo.role === "superAdmin") {
-    console.log("adminnnnnn", userInfo.userId);
     db.collection("class-schedule")
-      .doc(props.courseObj._id)
+      .doc(props.courseInfo._id)
       .remove()
       .then((res) => {
         uni.showToast({
@@ -174,7 +257,6 @@ async function deleteData() {
           title: "删除成功！",
         });
         emit("refreshList");
-        console.log("res88888", res);
       })
       .catch((err) => {
         console.log("err", err);
@@ -202,6 +284,18 @@ async function deleteData() {
     });
   }
 }
+const goDetail = () => {
+  console.log("card");
+  const formattedDate = props.clickDate.toISOString(); // 转换为 ISO 格式
+  const courseObj = {
+    ...props.courseInfo,
+    isoDate: formattedDate,
+  };
+  const queryString = encodeURIComponent(JSON.stringify(courseObj));
+  uni.navigateTo({
+    url: `/pages-reserve/reserveDetail/reserveDetail?courseData=${queryString}`,
+  });
+};
 </script>
 
 <style scoped lang="scss">
@@ -294,25 +388,25 @@ async function deleteData() {
       }
     }
 
-    .student-avatar-list {
-      display: flex;
-      margin-top: 10px;
-      padding: 0 10px;
-      .avatar-wrapper {
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        overflow: hidden;
-        margin-right: 5px;
-        border: 0.5px solid rgba(255, 255, 255, 0.3);
+    // .student-avatar-list {
+    //   display: flex;
+    //   margin-top: 10px;
+    //   padding: 0 10px;
+    //   .avatar-wrapper {
+    //     width: 22px;
+    //     height: 22px;
+    //     border-radius: 50%;
+    //     overflow: hidden;
+    //     margin-right: 5px;
+    //     border: 0.5px solid rgba(255, 255, 255, 0.3);
 
-        .avatar {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-      }
-    }
+    //     .avatar {
+    //       width: 100%;
+    //       height: 100%;
+    //       object-fit: cover;
+    //     }
+    //   }
+    // }
 
     .reserve-btn {
       position: absolute;
@@ -326,30 +420,10 @@ async function deleteData() {
     .more {
       position: absolute;
       top: 10rpx;
-      right: 50rpx;
+      right: 30rpx;
       z-index: 3;
+      padding: 10rpx 20rpx;
       color: rgba(255, 255, 255, 0.5);
-    }
-    .edit-btn,
-    .delete-btn {
-      position: absolute;
-      top: 10px;
-      background-color: #006b52;
-      border: none;
-      color: #fff;
-      font-size: 16px;
-      text-align: center;
-      border-radius: 5px;
-      z-index: 3;
-    }
-
-    .delete-btn {
-      right: 165rpx;
-      background-color: #92181b;
-    }
-
-    .edit-btn {
-      right: 25rpx;
     }
   }
 }

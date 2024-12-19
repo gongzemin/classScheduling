@@ -49,31 +49,77 @@ const collection = db.collection("users");
 // 登录状态
 const isLoggedIn = ref(false);
 const userInfo = reactive({
-  mobile: "15112653200",
-  avatar: "/static/images/defaultAvatar.jpeg", // 默认头像
-  userId: "67526d0789bd27450be85c4e",
-  nickname: "未登录",
-  role: "",
+  // mobile: "15270228821",
+  // avatar: "/static/images/defaultAvatar.jpeg", // 默认头像
+  // userId: "67526d0789bd27450be85c4e",
+  // nickname: "未登录",
+  // role: "Admin",
+  // expirationDate: "2025-02-11T18:00:30Z",
+  // cardType: "timeCard",
 });
+
+// uni.setStorageSync("userInfo", {
+//   mobile: "15270228821",
+//   avatar: "/static/images/defaultAvatar.jpeg", // 默认头像
+//   userId: "675abd1bce5ec9aad5641046",
+//   nickname: "未登录",
+//   role: "Admin",
+//   expirationDate: "2025-02-11T18:00:30Z",
+//   cardType: "timeCard",
+// });
+
+// uni.setStorageSync("userInfo", {
+//   mobile: "15270223103",
+//   userId: "6763d1654b9247079917bee5",
+//   cardType: "sessionCard",
+//   nickname: "录",
+//   role: "Admin",
+//   expirationDate: "2025-02-11T18:00:30Z",
+// });
+
+// db.collection("users")
+//   .add({
+//     gender: 0,
+//     cardType: "sessionCard",
+//     mobile: "15270223103",
+//     avatar:
+//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/7J0bHgHKxZLQd6e32c82d19bbf5917bb784504b8b994.jpg",
+//   })
+//   .then((res) => {
+//     console.log("hha");
+//   });
+
+// uni.setStorageSync("userInfo", {
+//   mobile: "15112653200",
+//   avatar: "/static/images/defaultAvatar.jpeg", // 默认头像
+//   userId: "67526d0789bd27450be85c4e",
+//   nickname: "未登录",
+//   role: "superAdmin",
+//   expirationDate: "2025-02-11T18:00:30Z",
+//   cardType: "timeCard",
+// });
 
 // 获取用户电话获取用户id
 // 获取用户信息的方法
 const getUser = async () => {
   try {
+    console.log("userinfo.mobile", userInfo.mobile);
     const queryRes = await collection
       .where({ mobile: userInfo.mobile })
-      .field("mobile,role")
+      .field("mobile,role,expirationDate,cardType")
       .get();
 
-    console.log("queryRes----", queryRes);
-    if (queryRes.result.errCode === 0 && queryRes.result.data.length) {
-      userInfo.userId = queryRes.result.data[0]._id;
-      userInfo.role = queryRes.result.data[0].role;
+    console.log("queryRes----", queryRes, userInfo.mobile);
+    if (queryRes.result.errCode === 0 && queryRes.result.data?.length) {
+      const { _id, role, expirationDate, cardType } = queryRes.result.data[0];
+      userInfo.userId = _id;
+      userInfo.role = role;
       const existingUserInfo = uni.getStorageSync("userInfo") || {};
       uni.setStorageSync("userInfo", {
         ...existingUserInfo,
-        role: queryRes.result.data[0].role,
-        userId: queryRes.result.data[0]._id,
+        role,
+        userId: _id,
+        expirationDate,
       });
       console.log("获取到的 userId:", userInfo.userId);
       return true;
@@ -86,7 +132,7 @@ const getUser = async () => {
     return false;
   }
 };
-getUser();
+
 const onChooseAvatar = async (e: any) => {
   const tempFilePath = e.detail.avatarUrl; // 获取临时路径
   userInfo.avatar = e.detail.avatarUrl;
