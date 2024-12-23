@@ -57,7 +57,7 @@
           <text class="label">已预约人数：</text>
           <text>
             {{ courseInfo.reservedUsers && courseInfo.reservedUsers.length }}/{{
-              courseInfo.capacity
+              courseInfo.capacity || 20
             }}
           </text>
         </view>
@@ -279,30 +279,7 @@ const bookCourse = async (val) => {
   const { userId, avatar, cardType } = userInfo;
   if (val === "预约") {
     // 如果是次卡，先检查用户的剩余次数
-    if (cardType === "sessionCard") {
-      const { result } = await db
-        .collection("users")
-        .doc(userId)
-        .field("remainingSessions")
-        .get({
-          getOne: true,
-        });
 
-      if (!Object.keys(result.data).length) {
-        throw new Error("用户不存在");
-      }
-      const remainingSessions = result.data?.remainingSessions || 0;
-      console.log("remainingSessions", remainingSessions);
-
-      // 检查剩余次数是否足够
-      if (remainingSessions <= 0) {
-        uni.showToast({
-          title: `卡剩余次数不足`,
-        });
-        uni.hideLoading();
-        return;
-      }
-    }
     handleBook();
   } else if (val === "取消预约") {
     handleCancel();

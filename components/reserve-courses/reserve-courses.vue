@@ -6,7 +6,7 @@
         @refreshList="refresh"
         :clickDate="clickDate" />
     </view>
-    <view class="add" v-if="isAdmin" @click="goNew">
+    <view class="add" v-if="isAdmin" @click="goNewCourse">
       <uni-icons type="plusempty" size="40" color="#fff"></uni-icons>
     </view>
   </view>
@@ -82,6 +82,18 @@ const sortedTimes = () => {
   // });
 };
 
+// const test = async () => {
+// 	const existingReservation = await db
+// 	    .collection("user-reserve")
+// 	    .where({
+// 	      user_id: userId,
+// 	      class_id: queryClassId,
+// 	    })
+// 	    .get();
+// 		console.log('ssss', existingReservation)
+// }
+// console.log('xxx', test())
+
 const getReserveUser = (course, targetDate) => {
   // 获取当天的起始时间
   const startOfDay = new Date(targetDate);
@@ -95,6 +107,7 @@ const getReserveUser = (course, targetDate) => {
     .collection("user-reserve")
     .where({
       class_id: course._id,
+      canceled: false, // 增加canceled为false的条件
       reserve_class_date: db.command
         .gte(startOfDay)
         .and(db.command.lte(endOfDay)), // 日期范围查询})
@@ -130,6 +143,8 @@ const updateDayCourses = async (dayOfWeek, forceUpdate = false) => {
   dayCourses.value = filterCoursesByDay(targetDay).map((item) => ({
     ...item,
     time: formatCourseTime(item.startTime, item.endTime),
+    isReserved: false,
+    reservedUsers: [],
   }));
   sortedTimes();
 
@@ -172,7 +187,7 @@ const updateDayCourses = async (dayOfWeek, forceUpdate = false) => {
 };
 
 // 页面跳转：前往新增课程页面
-const goNew = () => {
+const goNewCourse = () => {
   uni.navigateTo({ url: "/pages-courses/newCourse/newCourse" });
 };
 

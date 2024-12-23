@@ -1,5 +1,7 @@
 export function formatTimestampToHHMM(timestamp) {
   const date = new Date(timestamp);
+  // 调整为北京时间（UTC+8）
+  const beijingTime = new Date(date.getTime() + 8 * 60 * 60 * 1000); // 将 UTC 转为 北京时间
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
   return `${hours}:${minutes}`;
@@ -43,4 +45,12 @@ export function formatISOToFullDateTime(dateString: string): string {
   const mi = String(date.getMinutes()).padStart(2, "0");
   const ss = String(date.getSeconds()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+}
+
+// 获取当前时间的HH:MM形式
+export function getCurrentTimeInHHMM() {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
 }

@@ -111,6 +111,40 @@ function checkMembershipValidity(expirationDate) {
   }
 }
 
+/**
+ * 检查用户次卡剩余次数
+ * @param {string} userId - 用户ID
+ * @param {Object} db - 数据库实例
+ * @returns {Promise<boolean>} 是否有足够的剩余次数
+ * @throws {Error} 用户不存在或次卡不足
+ */
+async function checkRemainingSessions(userId) {
+  const db = uniCloud.database();
+  const { result } = await db
+    .collection("users")
+    .doc(userId)
+    .field("remainingSessions")
+    .get({
+      getOne: true,
+    });
+
+  if (!Object.keys(result.data).length) {
+    throw new Error("用户不存在");
+  }
+
+  const remainingSessions = result.data?.remainingSessions || 0;
+  console.log("remainingSessions", remainingSessions);
+  // 取消预约就不要判断次数是不是为0 不然为0次就没法取消
+  if (remainingSessions <= 0 && buttonStatus.value === "预约") {
+    uni.showToast({
+      title: "卡剩余次数不足",
+    });
+    uni.hideLoading();
+    return false;
+  }
+  return true;
+}
+
 // 点击事件
 const bookCourse = async () => {
   console.log("inner");
@@ -119,10 +153,16 @@ const bookCourse = async () => {
       url: "/pages/login/login",
     });
   } else {
-    const { expirationDate, cardType } = userInfo;
+    const { expirationDate, cardType, userId } = userInfo;
     // 预约时调用
     console.log("expirationDate", expirationDate);
     if (checkMembershipValidity(expirationDate)) {
+      if (cardType === "sessionCard") {
+        const hasSessions = await checkRemainingSessions(userId);
+        if (!hasSessions) {
+          return;
+        }
+      }
       emit("book", buttonStatus.value);
     } else {
       console.log("预约失败");

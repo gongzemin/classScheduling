@@ -183,7 +183,11 @@ const onChooseAvatar = async (e: any) => {
 };
 
 const menuItems = ref([
-  { label: "已约", path: "my-reservations", icon: "calendar" },
+  {
+    label: "已约",
+    path: "/pages-me-dashboard/myReserve/myReserve",
+    icon: "calendar",
+  },
   { label: "上课记录", path: "course-records", icon: "info" },
   {
     label: "会员卡",
