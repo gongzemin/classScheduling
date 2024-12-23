@@ -20,7 +20,7 @@ import { formatCourseTime } from "../../common/util";
 
 const props = defineProps({
   dayOfTheWeek: String, // 当前展示的星期
-  clickDate: Date, // 点击的日期对象
+  clickDate: Date, // 点击的日期对象 当天展示的星期-日期表现形式
 });
 
 // 数据库引用
@@ -77,9 +77,36 @@ const sortedTimes = () => {
     return startA - startB; // 升序排序
   });
   // 预约用户倒序排列
-  dayCourses.value.forEach((item) => {
-    item.reservedUsers && item.reservedUsers.reverse();
-  });
+  // dayCourses.value.forEach((item) => {
+  //   item.reservedUsers && item.reservedUsers.reverse();
+  // });
+};
+
+const getReserveUser = (course, targetDate) => {
+  // 获取当天的起始时间
+  const startOfDay = new Date(targetDate);
+  startOfDay.setHours(0, 0, 0, 0); // 设置为当天 00:00:00.000
+
+  // 获取当天的结束时间
+  const endOfDay = new Date(targetDate);
+  endOfDay.setHours(23, 59, 59, 999); // 设置为当天 23:59:59.999
+
+  let reserveTemp = db
+    .collection("user-reserve")
+    .where({
+      class_id: course._id,
+      reserve_class_date: db.command
+        .gte(startOfDay)
+        .and(db.command.lte(endOfDay)), // 日期范围查询})
+    })
+    .getTemp();
+  let userTemp = db.collection("users").field("_id, avatar").getTemp();
+
+  return db
+    .collection(reserveTemp, userTemp)
+    .orderBy("reserve_time desc")
+    .limit(course.capacity)
+    .get();
 };
 
 // 数据更新：更新需要展示的课程
@@ -105,13 +132,41 @@ const updateDayCourses = async (dayOfWeek, forceUpdate = false) => {
     time: formatCourseTime(item.startTime, item.endTime),
   }));
   sortedTimes();
-  dayCourses.value.forEach((item) => {
-    item.isReserved =
-      item.reservedUsers &&
-      item.reservedUsers.some(
-        (user) => user.user_id === storedUserInfo.value.userId
-      );
-  });
+
+  // 设置用户头像
+  for (let course of dayCourses.value) {
+    const res = await getReserveUser(course, props.clickDate); // 获取预约用户信息
+    if (res.result.errCode === 0) {
+      // console.log(
+      //   "9999",
+      //   res.result.data,
+      //   props.clickDate,
+      //   typeof props.clickDate
+      // );
+      if (res.result.data.length) {
+        let users = res.result.data
+          .map((item) => item.user_id.length && item.user_id)
+          .flat();
+        // console.log("999999991", users);
+        course.reservedUsers = users.map((item) => item.avatar);
+        course.isReserved = users
+          .map((item) => item._id)
+          .includes(storedUserInfo.value.userId);
+      } else {
+        course.isReserved = false;
+        course.reservedUsers = [];
+      }
+    }
+  }
+
+  console.log("Updated day courses:", dayCourses.value);
+  // dayCourses.value.forEach((item) => {
+  //   item.isReserved =
+  //     item.reservedUsers &&
+  //     item.reservedUsers.some(
+  //       (user) => user.user_id === storedUserInfo.value.userId
+  //     );
+  // });
 
   console.log("Updated day courses:", dayCourses.value);
 };
@@ -140,11 +195,14 @@ onMounted(() => {
   updateDayCourses(props.dayOfTheWeek, true); // 强制刷新
 });
 
-// 监听：props.dayOfTheWeek 变化时更新课程
+// 这里应该监听日期 而不是周几 不然后面的周几和现在的周几用户数据一样
 watch(
-  () => props.dayOfTheWeek,
-  (newDayOfTheWeek) => updateDayCourses(newDayOfTheWeek)
+  () => props.clickDate,
+  () => {
+    updateDayCourses(props.dayOfTheWeek, false);
+  }
 );
+// console.log("clickDate000000000", props.clickDate, typeof props.clickDate);
 </script>
 
 <style scoped lang="scss">

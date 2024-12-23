@@ -52,12 +52,18 @@
       ]
     },
     {
-      "root": "pages-me-reserve",
+      "root": "pages-me-dashboard",
       "pages": [
         {
-          "path": "reserveList/reserveList",
+          "path": "myReserve/myReserve",
           "style": {
             "navigationBarTitleText": "我的预约"
+          }
+        },
+        {
+          "path": "classAttendanceRecord/classAttendanceRecord",
+          "style": {
+            "navigationBarTitleText": "上课记录"
           }
         }
       ]
@@ -91,14 +97,25 @@
       ]
     },
     {
-      "root": "pages-reserve",
+      "root": "pages-membership-card",
       "pages": [{
-      	"path" : "reserveDetail/reserveDetail",
+      	"path" : "my-membership-card/my-membership-card",
       	"style" : 
       	{
-      		"navigationBarTitleText" : "预约详情"
+      		"navigationBarTitleText" : ""
       	}
       }]
+    },
+    {
+      "root": "pages-reserve",
+      "pages": [
+        {
+          "path": "reserveDetail/reserveDetail",
+          "style": {
+            "navigationBarTitleText": "预约详情"
+          }
+        }
+      ]
     }
   ],
   "globalStyle": {

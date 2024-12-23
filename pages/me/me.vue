@@ -185,7 +185,11 @@ const onChooseAvatar = async (e: any) => {
 const menuItems = ref([
   { label: "已约", path: "my-reservations", icon: "calendar" },
   { label: "上课记录", path: "course-records", icon: "info" },
-  { label: "会员卡", path: "membership-cards", icon: "wallet" },
+  {
+    label: "会员卡",
+    path: "/pages-membership-card/my-membership-card/my-membership-card",
+    icon: "wallet",
+  },
   {
     label: "课程表管理",
     path: "/pages-courses/courseList/courseList",

@@ -199,10 +199,6 @@ const isAdmin = computed(() =>
   storedUserInfo.value?.role === "superAdmin" ? true : false
 );
 
-function getAvatar(item) {
-  return item.avatar || "../../static/images/defAvatar.png";
-}
-
 // 删除前确认
 function deleteCourse() {
   uni.showModal({

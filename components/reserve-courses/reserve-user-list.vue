@@ -1,7 +1,7 @@
 <template>
   <view class="avatars" v-if="reservedUsers && reservedUsers.length">
     <template v-for="(item, idx) in reservedUsers" :key="idx">
-      <image :src="getAvatar(item)" mode="aspectFill" class="avatar"></image>
+      <image :src="getAvatar1(item)" mode="aspectFill" class="avatar"></image>
     </template>
   </view>
 </template>
@@ -21,10 +21,13 @@ defineProps({
     required: true,
   },
 });
+function getAvatar1(user) {
+  // 检查 user.avatar 是否为有效字符串
+  return typeof user === "string" ? user : "../../static/images/defAvatar.png";
+}
 
-// 返回头像链接的方法
 const getAvatar = (user: User): string => {
-  return user.avatar || "default-avatar.png"; // 默认头像
+  return user; //|| "../../static/images/defAvatar.png"; // 默认头像
 };
 </script>
 
