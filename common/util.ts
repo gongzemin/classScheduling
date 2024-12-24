@@ -54,3 +54,21 @@ export function getCurrentTimeInHHMM() {
   const minutes = String(now.getMinutes()).padStart(2, "0");
   return `${hours}:${minutes}`;
 }
+
+// 把时间戳转成HH:MM 比较时间大小
+export function compareTimeStrings(time1:string, time2:string) {
+  const [hours1, minutes1] = time1.split(":").map(Number);
+  const [hours2, minutes2] = time2.split(":").map(Number);
+
+  // Convert both times to total minutes from midnight
+  const time1InMinutes = hours1 * 60 + minutes1;
+  const time2InMinutes = hours2 * 60 + minutes2;
+
+  if (time1InMinutes < time2InMinutes) {
+    return -1; // time1 is earlier than time2
+  } else if (time1InMinutes > time2InMinutes) {
+    return 1; // time1 is later than time2
+  } else {
+    return 0; // both times are equal
+  }
+}

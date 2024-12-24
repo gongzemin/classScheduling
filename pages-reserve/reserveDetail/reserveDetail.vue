@@ -79,13 +79,15 @@
 <script setup>
 import { ref, reactive, computed } from "vue";
 import { onReady, onLoad } from "@dcloudio/uni-app";
-import { formatCourseTime, formatDateToYYYYMMDD } from "../../common/util";
+import { formatCourseTime, formatDateToYYYYMMDD } from "../../common/util.ts";
 import reserveButton from "../../components/reserve-courses/detail-reserve-button.vue";
 import reserveUserList from "../../components/reserve-courses/reserve-user-list.vue";
 
 const db = uniCloud.database();
 const collection = db.collection("class-schedule");
 const userInfo = uni.getStorageSync("userInfo");
+// TODO 有没有必要用ref
+const storedUserInfo = ref(uni.getStorageSync("userInfo"));
 
 const bookedCount = ref(12); // 已预约人数
 const maxCapacity = 20; // 最大人数
@@ -211,6 +213,63 @@ const starCount = computed(() => {
 //   },
 // ];
 
+// 设置用户头像
+
+const getReserveUser = (course, targetDate) => {
+  // 获取当天的起始时间
+  const startOfDay = new Date(targetDate);
+  startOfDay.setHours(0, 0, 0, 0); // 设置为当天 00:00:00.000
+
+  // 获取当天的结束时间
+  const endOfDay = new Date(targetDate);
+  endOfDay.setHours(23, 59, 59, 999); // 设置为当天 23:59:59.999
+
+  let reserveTemp = db
+    .collection("user-reserve")
+    .where({
+      class_id: course._id,
+      canceled: false, // 增加canceled为false的条件
+      reserve_class_date: db.command
+        .gte(startOfDay)
+        .and(db.command.lte(endOfDay)), // 日期范围查询})
+    })
+    .getTemp();
+  let userTemp = db.collection("users").field("_id, avatar").getTemp();
+  uni.hideLoading();
+  return db
+    .collection(reserveTemp, userTemp)
+    .orderBy("reserve_time desc")
+    .limit(course.capacity)
+    .get();
+};
+
+const updateUser = async () => {
+  uni.showLoading();
+  console.log("updateUser");
+  const res = await getReserveUser(courseInfo, courseInfo.isoDate); // 获取预约用户信息
+  if (res.result.errCode === 0) {
+    // console.log(
+    //   "9999",
+    //   res.result.data,
+    //   props.clickDate,
+    //   typeof props.clickDate
+    // );
+    if (res.result.data.length) {
+      let users = res.result.data
+        .map((item) => item.user_id.length && item.user_id)
+        .flat();
+      console.log("999999991", users);
+      courseInfo.reservedUsers = users.map((item) => item.avatar);
+      courseInfo.isReserved = users
+        .map((item) => item._id)
+        .includes(storedUserInfo.value.userId);
+    } else {
+      courseInfo.isReserved = false;
+      courseInfo.reservedUsers = [];
+    }
+  }
+};
+
 function getAvatar(item) {
   return item.avatar || "../../static/images/defAvatar.png";
 }
@@ -232,8 +291,10 @@ const handleBook = () => {
       const { code, message } = res;
       if (code === 200) {
         uni.hideLoading();
+        updateUser();
         uni.$emit("refreshList", { msg: "更新列表" });
-        uni.navigateBack();
+
+        // uni.navigateBack();
         console.log("预约成功");
       } else {
         throw new Error(message);
@@ -259,8 +320,9 @@ const handleCancel = () => {
       const { code, message } = res;
       if (code === 200) {
         uni.hideLoading();
+        updateUser();
         uni.$emit("refreshList", { msg: "更新列表" });
-        uni.navigateBack();
+        // uni.navigateBack();
         console.log("取消预约成功");
       } else {
         throw new Error(message);
@@ -284,22 +346,6 @@ const bookCourse = async (val) => {
   } else if (val === "取消预约") {
     handleCancel();
   }
-};
-
-const getReserveUser = () => {
-  let reserveTemp = db
-    .collection("user_reserve")
-    .where(`class_id == "${courseInfo._id}"`)
-    .getTemp();
-  let userTemp = db.collection("users").field("_id, avatar").getTemp();
-  db.collection(reserveTemp, userTemp)
-    .orderBy("reserve_time desc")
-    .limit(20)
-    .get()
-    .then((res) => {
-      reserveUserArr.value = res.result.data;
-      console.log("res----", res);
-    });
 };
 
 onLoad((options) => {

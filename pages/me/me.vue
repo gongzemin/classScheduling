@@ -188,7 +188,11 @@ const menuItems = ref([
     path: "/pages-me-dashboard/myReserve/myReserve",
     icon: "calendar",
   },
-  { label: "上课记录", path: "course-records", icon: "info" },
+  {
+    label: "上课记录",
+    path: "/pages-me-dashboard/classAttendanceRecord/classAttendanceRecord",
+    icon: "info",
+  },
   {
     label: "会员卡",
     path: "/pages-membership-card/my-membership-card/my-membership-card",

@@ -15,7 +15,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from "vue";
+import { ref, reactive, computed, watch } from "vue";
 import { parseTimeToMinutes } from "../../common/util";
 import { onLoad } from "@dcloudio/uni-app";
 
@@ -60,6 +60,13 @@ const buttonStatus = computed(() => {
     return getBtnStatusBaseDate();
   }
 });
+
+watch(
+  () => props.courseInfo.isReserved,
+  () => {
+    console.log("props.courseInfo.isReserved", props.courseInfo.isReserved);
+  }
+);
 
 const getBtnStatusBaseDate = () => {
   const currentMinutes = now.value.getHours() * 60 + now.value.getMinutes(); // 当前时间分钟数
