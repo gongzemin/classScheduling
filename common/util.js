@@ -36,7 +36,7 @@ export function formatDateToYYYYMMDD(dateObj) {
 }
 
 // 日期格式化函数  2025-06-30T23:59:59Z 格式的日期转换成 yyyy-mm-dd hh:mm:ss
-export function formatISOToFullDateTime(dateString: string): string {
+export function formatISOToFullDateTime(dateString) {
   const date = new Date(dateString);
   const yyyy = date.getFullYear();
   const mm = String(date.getMonth() + 1).padStart(2, "0"); // 月份从0开始
@@ -56,7 +56,7 @@ export function getCurrentTimeInHHMM() {
 }
 
 // 把时间戳转成HH:MM 比较时间大小
-export function compareTimeStrings(time1:string, time2:string) {
+export function compareTimeStrings(time1, time2) {
   const [hours1, minutes1] = time1.split(":").map(Number);
   const [hours2, minutes2] = time2.split(":").map(Number);
 

@@ -39,7 +39,7 @@ import {
   formatTimestampToHHMM,
   getCurrentTimeInHHMM,
   compareTimeStrings,
-} from "../../common/util";
+} from "../../common/util.js";
 
 const db = uniCloud.database();
 const userInfo = uni.getStorageSync("userInfo");

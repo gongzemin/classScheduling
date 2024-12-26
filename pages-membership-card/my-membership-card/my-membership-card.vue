@@ -30,7 +30,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive } from "vue";
 import MemberCard from "./MemberCard.vue";
-import { formatISOToFullDateTime } from "../../common/util";
+import { formatISOToFullDateTime } from "../../common/util.js";
 
 const userInfo = uni.getStorageSync("userInfo");
 

@@ -21,7 +21,7 @@
             @blur="onNameChange"
             type="nickname"
             placeholder="请输入昵称" />
-          <view v-if="isLoggedIn">{{ encryptMobile }}</view>
+          <view v-if="isLoggedIn">{{ userInfo.mobile }}</view>
         </view>
       </view>
     </view>
@@ -33,7 +33,24 @@
         :key="index"
         class="card-item"
         @click="navigateTo(item.path)">
-        <uni-icons :type="item.icon" size="30"></uni-icons>
+        <uni-icons size="24" v-if="item.type" fontFamily="iconfont">
+          {{ item.icon }}
+        </uni-icons>
+        <uni-icons :type="item.icon" size="30" v-else></uni-icons>
+        <text>{{ item.label }}</text>
+      </view>
+    </view>
+    <!-- v-if="userInfo.role && userInfo.role == 'superAdmin'" -->
+    <view class="card">
+      <view
+        v-for="(item, index) in adminItems"
+        :key="index"
+        class="card-item"
+        @click="navigateTo(item.path)">
+        <uni-icons size="24" v-if="item.type" fontFamily="iconfont">
+          {{ item.icon }}
+        </uni-icons>
+        <uni-icons :type="item.icon" size="30" v-else></uni-icons>
         <text>{{ item.label }}</text>
       </view>
     </view>
@@ -196,17 +213,8 @@ const menuItems = ref([
   {
     label: "会员卡",
     path: "/pages-membership-card/my-membership-card/my-membership-card",
-    icon: "wallet",
-  },
-  {
-    label: "课程表管理",
-    path: "/pages-courses/courseList/courseList",
-    icon: "wallet",
-  },
-  {
-    label: "用户管理",
-    path: "/pages-courses/courseList/courseList",
-    icon: "wallet",
+    icon: "\ue693",
+    type: "iconfont",
   },
   {
     label: "联系客服",
@@ -214,9 +222,35 @@ const menuItems = ref([
     icon: "chat",
     action: "contactCustomerService",
   },
-  { label: "设置", path: "settings", icon: "gear" },
-  { label: "意见反馈", path: "feedback", icon: "mail-open" },
-  { label: "退出登录", path: "", icon: "mail-open" },
+  // { label: "设置", path: "settings", icon: "gear" },
+  // { label: "意见反馈", path: "feedback", icon: "mail-open" },
+  { label: "退出登录", path: "", icon: "\ue61d", type: "iconfont" },
+]);
+
+const adminItems = ref([
+  {
+    label: "课表管理",
+    path: "/pages-courses/courseList/courseList",
+    icon: "\ue600",
+    type: "iconfont",
+  },
+  {
+    label: "用户管理",
+    path: "/pages-courses/courseList/courseList",
+    icon: "staff",
+  },
+  {
+    label: "教师管理",
+    path: "/pages-courses/courseList/courseList",
+    icon: "\ue7d0",
+    type: "iconfont",
+  },
+  {
+    label: "舞室信息管理",
+    path: "/pages-studio/studio/studio",
+    icon: "shop",
+    action: "contactCustomerService",
+  },
 ]);
 
 const encryptMobile = computed(() => {

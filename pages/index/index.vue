@@ -2,7 +2,7 @@
   <view class="home">
     <home-header :studioInfo="studioInfo" v-if="studioInfo"></home-header>
     <view class="main">
-      <home-overview></home-overview>
+      <home-overview :studioInfo="studioInfo"></home-overview>
       <home-teachers></home-teachers>
       <home-contact :studioInfo="studioInfo"></home-contact>
     </view>
@@ -13,13 +13,20 @@
 const db = uniCloud.database();
 import { reactive, ref } from "vue";
 let studioInfo = reactive({});
+uni.showLoading();
 db.collection("studio")
-  .get()
+  .get({
+    getOne: true,
+  })
   .then((res) => {
+    uni.hideLoading();
     if (res.result.errCode === 0) {
-      Object.assign(studioInfo, res.result.data[0]);
+      Object.assign(studioInfo, res.result.data);
     }
     console.log("res--studio-", studioInfo);
+  })
+  .catch((err) => {
+    uni.hideLoading();
   });
 </script>
 

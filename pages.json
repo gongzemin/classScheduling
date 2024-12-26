@@ -93,18 +93,37 @@
           "style": {
             "navigationBarTitleText": "新增教室"
           }
+        },
+        {
+          "path": "studio/about",
+          "style": {
+            "navigationBarTitleText": "品牌介绍"
+          }
+        },
+        {
+          "path": "studio/addStudio",
+          "style": {
+            "navigationBarTitleText": "新增舞室信息"
+          }
+        },
+        {
+          "path": "studio/studio",
+          "style": {
+            "navigationBarTitleText": "舞室信息"
+          }
         }
       ]
     },
     {
       "root": "pages-membership-card",
-      "pages": [{
-      	"path" : "my-membership-card/my-membership-card",
-      	"style" : 
-      	{
-      		"navigationBarTitleText" : ""
-      	}
-      }]
+      "pages": [
+        {
+          "path": "my-membership-card/my-membership-card",
+          "style": {
+            "navigationBarTitleText": ""
+          }
+        }
+      ]
     },
     {
       "root": "pages-reserve",

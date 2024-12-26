@@ -20,7 +20,8 @@
               <view class="stars">
                 <view v-for="n in 3" :key="n" class="star">
                   <text v-if="n <= starCount" class="filled">★</text>
-                  <text v-else>☆</text>
+                  <text v-else>★</text>
+                  <!--    <text v-else>🌟</text> -->
                 </view>
               </view>
             </view>

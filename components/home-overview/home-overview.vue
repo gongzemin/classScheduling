@@ -14,22 +14,47 @@
   </view>
 </template>
 <script setup>
-import { ref } from "vue";
-const menuItems = ref([
+import { ref, watch } from "vue";
+
+const props = defineProps({
+  studioInfo: Object,
+});
+
+let menuList = [
   // { label: "课表", path: "my-reservations", icon: "calendar" },
   // { label: "作品集", path: "course-records", icon: "videocam" },
   { label: "舞室相册", path: "course-records", icon: "image" },
   { label: "租教室", path: "membership-cards", icon: "calendar" },
   { label: "演出合作", path: "membership-cards", icon: "flag" },
   { label: "优惠", path: "course-records", icon: "gift" },
-  { label: "品牌介绍", path: "membership-cards", icon: "info" },
-]);
+  { label: "品牌介绍", path: "/pages-studio/studio/about", icon: "info" },
+];
+const menuItems = ref([]);
 
 const navigateTo = (path) => {
   uni.navigateTo({
     url: path,
   });
 };
+watch(
+  () => props.studioInfo?.modules,
+  () => {
+    console.log(
+      "props.studioInfo",
+      props.studioInfo.modules,
+      "dd",
+      Array.isArray(props.studioInfo.modules),
+      typeof props.studioInfo.modules
+    );
+    if (props.studioInfo?.modules.length) {
+      console.log("props.studioInfo0000", props.studioInfo);
+      menuItems.value = menuList.filter((item) =>
+        props.studioInfo.modules.includes(item.label)
+      );
+      console.log("menuItems.value", menuItems.value);
+    }
+  }
+);
 </script>
 
 <style lang="scss" scoped>

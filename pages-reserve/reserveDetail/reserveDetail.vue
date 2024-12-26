@@ -79,7 +79,7 @@
 <script setup>
 import { ref, reactive, computed } from "vue";
 import { onReady, onLoad } from "@dcloudio/uni-app";
-import { formatCourseTime, formatDateToYYYYMMDD } from "../../common/util.ts";
+import { formatCourseTime, formatDateToYYYYMMDD } from "../../common/util.js";
 import reserveButton from "../../components/reserve-courses/detail-reserve-button.vue";
 import reserveUserList from "../../components/reserve-courses/reserve-user-list.vue";
 

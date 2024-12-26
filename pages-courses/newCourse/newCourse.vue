@@ -151,7 +151,7 @@
 <script lang="ts" setup>
 import { ref, reactive } from "vue";
 import { onReady, onLoad } from "@dcloudio/uni-app";
-import { formatTimestampToHHMM } from "../../common/util";
+import { formatTimestampToHHMM } from "../../common/util.js";
 
 const db = uniCloud.database();
 interface Teacher {
@@ -322,15 +322,15 @@ const onTimeChange = (event: any, type: "start" | "end") => {
   }
 };
 
-const uploadImage = () => {
-  uni.chooseImage({
-    count: 1,
-    sizeType: ["original"],
-    success: (res) => {
-      formData.courseTeacherPic = res.tempFilePaths[0];
-    },
-  });
-};
+// const uploadImage = () => {
+//   uni.chooseImage({
+//     count: 1,
+//     sizeType: ["original"],
+//     success: (res) => {
+//       formData.courseTeacherPic = res.tempFilePaths[0];
+//     },
+//   });
+// };
 
 db.collection("teachers")
   .get()

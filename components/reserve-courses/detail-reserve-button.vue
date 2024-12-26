@@ -16,7 +16,7 @@
 
 <script setup>
 import { ref, reactive, computed, watch } from "vue";
-import { parseTimeToMinutes } from "../../common/util";
+import { parseTimeToMinutes } from "../../common/util.js";
 import { onLoad } from "@dcloudio/uni-app";
 
 const userInfo = uni.getStorageSync("userInfo");

@@ -12,7 +12,7 @@ export default {
 };
 </script>
 
-<style>
+<style lang="scss">
 @import "@/common/style/common.scss";
-/*每个页面公共css */
+@import "@/static/fonts/iconfont.css"; /*每个页面公共css */
 </style>

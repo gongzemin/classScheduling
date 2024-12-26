@@ -1,24 +1,24 @@
 <template>
   <view>
     <Title content="联系我们"></Title>
-    <view class="contact-card">
+    <view class="contact-card" v-if="studioInfo?.phone">
       <view class="flex justify-between">
         <view class="info">
-          <view class="label">电话:</view>
+          <uni-icons type="phone-filled" size="20" class="mr-4"></uni-icons>
           <text class="content phone" @click="makePhoneCall">
-            {{ encryptMobile }}
+            {{ studioInfo?.phone }}
           </text>
         </view>
 
         <view class="info">
-          <view class="label">微信:</view>
+          <uni-icons type="weixin" size="20" class="mr-4"></uni-icons>
           <text class="content wechat" @click="copyWechatId">
             {{ studioInfo.wechatId }}
           </text>
         </view>
       </view>
       <view class="info">
-        <view class="label">地址:</view>
+        <uni-icons type="location-filled" size="20" class="mr-4"></uni-icons>
         <!-- <uni-icons type="location" size="20"></uni-icons> -->
         <text class="content address" @click="openMap">
           {{ studioInfo.address }}
@@ -37,13 +37,14 @@ const props = defineProps({
   studioInfo: Object,
 });
 
-const encryptMobile = computed(() => {
-  const phone = props.studioInfo?.phone;
-  if (typeof phone === "string" && phone.length === 11) {
-    return phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2");
-  }
-  return "";
-});
+// const encryptMobile = computed(() => {
+//   const phone = props.studioInfo?.phone;
+//   if (typeof phone === "string" && phone.length === 11) {
+//     return phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2");
+//   }
+//   return "";
+// });
+
 // Navigate to the built-in map with the address
 const openMap = () => {
   uni.navigateTo({

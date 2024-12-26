@@ -18,7 +18,7 @@
 
 <script setup>
 import { ref, computed } from "vue";
-import { parseTimeToMinutes } from "../../common/util";
+import { parseTimeToMinutes } from "../../common/util.js";
 
 const userInfo = uni.getStorageSync("userInfo");
 // Props 接收

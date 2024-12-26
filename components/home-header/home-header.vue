@@ -8,7 +8,7 @@
       duration="1000"
       circular="true">
       <swiper-item v-for="(item, index) in bannerList" :key="index">
-        <image :src="item" mode="aspectFill" class="banner-image" />
+        <image :src="item.url" mode="aspectFill" class="banner-image" />
       </swiper-item>
     </swiper>
   </view>
