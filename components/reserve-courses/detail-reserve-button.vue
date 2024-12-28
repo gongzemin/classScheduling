@@ -19,6 +19,7 @@ import { ref, reactive, computed, watch } from "vue";
 import { parseTimeToMinutes } from "../../common/util.js";
 import { onLoad } from "@dcloudio/uni-app";
 
+const db = uniCloud.database();
 const userInfo = uni.getStorageSync("userInfo");
 const emit = defineEmits(["book"]);
 const props = defineProps({
@@ -125,28 +126,13 @@ function checkMembershipValidity(expirationDate) {
  * @returns {Promise<boolean>} 是否有足够的剩余次数
  * @throws {Error} 用户不存在或次卡不足
  */
-async function checkRemainingSessions(userId) {
-  const db = uniCloud.database();
-  const { result } = await db
-    .collection("users")
-    .doc(userId)
-    .field("remainingSessions")
-    .get({
-      getOne: true,
-    });
-
-  if (!Object.keys(result.data).length) {
-    throw new Error("用户不存在");
-  }
-
-  const remainingSessions = result.data?.remainingSessions || 0;
+async function checkRemainingSessions(remainingSessions) {
   console.log("remainingSessions", remainingSessions);
   // 取消预约就不要判断次数是不是为0 不然为0次就没法取消
   if (remainingSessions <= 0 && buttonStatus.value === "预约") {
     uni.showToast({
       title: "卡剩余次数不足",
     });
-    uni.hideLoading();
     return false;
   }
   return true;
@@ -165,7 +151,9 @@ const bookCourse = async () => {
     console.log("expirationDate", expirationDate);
     if (checkMembershipValidity(expirationDate)) {
       if (cardType === "sessionCard") {
-        const hasSessions = await checkRemainingSessions(userId);
+        const hasSessions = await checkRemainingSessions(
+          userInfo.remainingSessions
+        );
         if (!hasSessions) {
           return;
         }

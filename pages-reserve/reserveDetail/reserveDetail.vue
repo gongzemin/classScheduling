@@ -275,13 +275,19 @@ function getAvatar(item) {
 }
 
 const handleBook = () => {
-  const { userId, avatar, cardType } = userInfo;
+  const {
+    userId = "",
+    avatar = "",
+    cardType = "",
+    _id: cardId = "",
+  } = userInfo || {};
   // 调用云对象
   // TODO 这样有个问题 如果预约了 然后更换了用户头像 这时候显示的头像是不是最新的
   uniCloud
     .importObject("reserve")
     .bookCourse({
       userId,
+      cardId,
       avatar,
       cardType,
       queryClassId: courseInfo._id,

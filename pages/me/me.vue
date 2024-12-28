@@ -32,7 +32,7 @@
         v-for="(item, index) in menuItems"
         :key="index"
         class="card-item"
-        @click="navigateTo(item.path)">
+        @click="navigatePath(item)">
         <uni-icons size="24" v-if="item.type" fontFamily="iconfont">
           {{ item.icon }}
         </uni-icons>
@@ -46,7 +46,7 @@
         v-for="(item, index) in adminItems"
         :key="index"
         class="card-item"
-        @click="navigateTo(item.path)">
+        @click="navigatePath(item)">
         <uni-icons size="24" v-if="item.type" fontFamily="iconfont">
           {{ item.icon }}
         </uni-icons>
@@ -123,20 +123,18 @@ const getUser = async () => {
     console.log("userinfo.mobile", userInfo.mobile);
     const queryRes = await collection
       .where({ mobile: userInfo.mobile })
-      .field("mobile,role,expirationDate,cardType")
+      .field("mobile,role")
       .get();
 
     console.log("queryRes----", queryRes, userInfo.mobile);
     if (queryRes.result.errCode === 0 && queryRes.result.data?.length) {
-      const { _id, role, expirationDate, cardType } = queryRes.result.data[0];
-      userInfo.userId = _id;
+      const { role } = queryRes.result.data[0];
+
       userInfo.role = role;
       const existingUserInfo = uni.getStorageSync("userInfo") || {};
       uni.setStorageSync("userInfo", {
         ...existingUserInfo,
         role,
-        userId: _id,
-        expirationDate,
       });
       console.log("获取到的 userId:", userInfo.userId);
       return true;
@@ -224,7 +222,7 @@ const menuItems = ref([
   // },
   // { label: "设置", path: "settings", icon: "gear" },
   // { label: "意见反馈", path: "feedback", icon: "mail-open" },
-  { label: "退出登录", path: "", icon: "\ue61d", type: "iconfont" },
+  { label: "退出登录", path: null, icon: "\ue61d", type: "iconfont" },
 ]);
 
 const adminItems = ref([
@@ -235,7 +233,7 @@ const adminItems = ref([
     type: "iconfont",
   },
   {
-    label: "用户管理",
+    label: "学员管理",
     path: "/pages-courses/courseList/courseList",
     icon: "staff",
   },
@@ -257,10 +255,21 @@ const encryptMobile = computed(() => {
   return userInfo.mobile.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2");
 });
 
-const navigateTo = (path) => {
-  uni.navigateTo({
-    url: path,
-  });
+const navigatePath = (item) => {
+  if (!item.path) {
+    logout();
+  } else {
+    if (item.label.includes("管理") && userInfo.role !== "superAdmin") {
+      uni.showToast({
+        title: "抱歉，暂无权限",
+        icon: "none",
+      });
+    } else {
+      uni.navigateTo({
+        url: item.path,
+      });
+    }
+  }
   // if (path && userInfo.role === "superAdmin") {
   //   uni.navigateTo({
   //     url: path,
@@ -301,6 +310,7 @@ const logout = () => {
       console.log(res);
       if (res.confirm) {
         uni.clearStorageSync();
+        isLoggedIn.value = false;
       }
     },
   });

@@ -11,7 +11,7 @@
         参与我们的活动，使用手机号注册登录即可
         <text class="highlight">免费预约99节课</text>
         ！
-        <text class="highlight">优惠期3个月</text>
+        <text class="highlight">有效期3个月</text>
         。
       </text>
     </view>
