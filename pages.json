@@ -5,7 +5,8 @@
       "path": "pages/index/index",
       "style": {
         "navigationBarTitleText": "首页",
-        "navigationStyle": "custom"
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
       }
     },
     {
@@ -111,6 +112,20 @@
           "style": {
             "navigationBarTitleText": "舞室信息"
           }
+        },
+        {
+        	"path" : "album/album",
+        	"style" : 
+        	{
+        		"navigationBarTitleText" : "相册"
+        	}
+        },
+        {
+        	"path" : "promotion/promotion",
+        	"style" : 
+        	{
+        		"navigationBarTitleText" : "优惠活动"
+        	}
         }
       ]
     },

@@ -8,7 +8,7 @@
         :interval="3000"
         :duration="800">
         <swiper-item v-for="(img, index) in studio.banner" :key="index">
-          <image :src="img" mode="aspectFill" class="banner-img"></image>
+          <image :src="img.url" mode="aspectFill" class="banner-img"></image>
         </swiper-item>
       </swiper>
 
@@ -31,11 +31,12 @@
 
         <!-- 微信 ID 显示 -->
         <view class="info-item">
-          <uni-icons type="wechat" size="20"></uni-icons>
+          <uni-icons type="weixin" size="20"></uni-icons>
           <text>{{ studio.wechatId }}</text>
         </view>
 
         <map
+          v-if="studio.lngLat.longitude"
           class="map"
           :longitude="studio.lngLat.longitude"
           :latitude="studio.lngLat.latitude"
@@ -50,8 +51,8 @@
 
     <!-- 固定位置的编辑按钮 -->
     <view class="fixed-edit-btn" @click="editDescription">
-      <uni-icons type="edit" size="30" color="#fff"></uni-icons>
-      <text class="edit-text">编辑</text>
+      <uni-icons type="compose" size="30" color="#fff"></uni-icons>
+      <!-- <text class="edit-text">编辑</text> -->
     </view>
   </view>
 </template>
@@ -188,21 +189,22 @@ onMounted(() => {
 /* 固定位置编辑按钮 */
 .fixed-edit-btn {
   position: fixed;
-  bottom: 30rpx;
+  bottom: 130rpx;
   right: 30rpx;
   background-color: #007aff;
-  padding: 15rpx;
-  border-radius: 0%;
+  // padding: 54rpx 15rpx;
+  border-radius: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 999;
+  width: 120rpx;
+  height: 120rpx;
 }
 
 .edit-text {
   font-size: 24rpx;
   color: #fff;
-  margin-left: 8rpx;
 }
 
 .rich-img {

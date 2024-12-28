@@ -9,6 +9,9 @@
       <uni-forms-item label="舞室名称" name="name" required>
         <uni-easyinput v-model="formData.name" placeholder="请输入舞室名称" />
       </uni-forms-item>
+      <uni-forms-item label="口号" name="slogan">
+        <uni-easyinput v-model="formData.slogan" placeholder="请输入口号" />
+      </uni-forms-item>
       <uni-forms-item label="客服电话" name="phone" required>
         <uni-easyinput
           v-model="formData.phone"
@@ -33,15 +36,15 @@
           multiple />
       </uni-forms-item>
 
-      <uni-forms-item label="请上传首页轮播图" name="banner" required>
+      <uni-forms-item
+        label="请上传舞室相册 前3张为首页轮播图"
+        name="banner"
+        required>
         <uni-file-picker
           v-model="formData.banner"
           fileMediatype="image"
-          :limit="4" />
+          :limit="14" />
       </uni-forms-item>
-      <!--  <uni-forms-item label="口号" name="slogan">
-        <uni-easyinput v-model="formData.slogan" placeholder="请输入口号" />
-      </uni-forms-item> -->
 
       <uni-forms-item label="请输入舞室介绍" name="descrption">
         <view class="content">
@@ -84,7 +87,9 @@
           placeholder="请输入纬度" />
       </uni-forms-item> -->
 
-      <button type="primary" @click="submitForm">提交</button>
+      <button type="primary" :disabled="submitting" @click="submitForm">
+        提交
+      </button>
     </uni-forms>
   </view>
 </template>
@@ -109,7 +114,7 @@ const formData = ref({
   },
 });
 const queryId = ref();
-
+const submitting = ref(false);
 // 表单校验规则
 const rules = {
   name: {
@@ -314,6 +319,7 @@ const addData = async () => {
         title: "发布成功",
       });
     }
+    submitting.value = false;
 
     // 显示成功后 为了发布成功可以 显示完 跳转
     setTimeout(() => {
@@ -323,11 +329,13 @@ const addData = async () => {
     }, 800);
   } catch (err) {
     console.error("操作失败", err);
+    submitting.value = false;
     uni.showToast({
       title: "操作失败",
       icon: "none",
     });
   } finally {
+    submitting.value = false;
     uni.hideLoading();
   }
 };
@@ -361,6 +369,7 @@ const onStatuschange = (e) => {
 
 // 提交表单
 const submitForm = () => {
+  submitting.value = true;
   formRef.value
     ?.validate()
     .then(() => {
@@ -411,6 +420,17 @@ const getDetail = async () => {
         description: studio.description || "",
         lngLat: studio.lngLat || { longitude: null, latitude: null },
       };
+
+      editorCtx.value.setContents({
+        html: studio.description,
+        success: () => {
+          console.log("内容设置成功");
+        },
+        fail: (err) => {
+          console.error("设置失败", err);
+        },
+      });
+
       // editorCtx.value = formData.value.description;
 
       // If you have any special logic to handle or populate specific fields, do that here

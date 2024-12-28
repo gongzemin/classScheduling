@@ -39,6 +39,11 @@ const getPhoneNumber = async (val) => {
   });
   console.log("result---", result);
 
+  // 获取当前日期和3个月后的日期
+  const currentDate = new Date();
+  const expirationDate = new Date();
+  expirationDate.setMonth(currentDate.getMonth() + 3);
+
   if (result.success) {
     const mobile = result.phoneNumber;
 
@@ -54,8 +59,17 @@ const getPhoneNumber = async (val) => {
       uni.setStorageSync("userInfo", { mobile });
       uni.showToast({ title: "手机号已授权", icon: "success" });
     } else {
+      // 新用户数据
+      const newUser = {
+        mobile,
+        status: 1, // 已激活
+        cardType: "sessionCard", // 次卡
+        validityPeriod: "3个月",
+        expirationDate: expirationDate,
+        createdAt: currentDate,
+      };
       // 手机号不存在，添加到数据库并存储到本地缓存
-      await db.collection("users").add({ mobile });
+      await db.collection("users").add(newUser);
       uni.setStorageSync("userInfo", { mobile });
       uni.showToast({ title: "授权成功", icon: "success" });
     }

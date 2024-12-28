@@ -2,11 +2,18 @@
   <view class="about-container">
     <view v-if="loading" class="loading">加载中...</view>
     <view v-else>
-      <view class="title">{{ studioData.name }}</view>
-      <view class="slogan">{{ studioData.slogan }}</view>
-
       <!-- 富文本内容展示 -->
-      <view class="rich-text" v-html="formattedDescription"></view>
+      <view class="rich-text-card">
+        <view class="rich-text" v-html="formattedDescription"></view>
+      </view>
+
+      <view class="studio-card">
+        <view class="title-container">
+          <view class="title">{{ studioData.name }}</view>
+          <!--     <view class="title-border"></view> -->
+        </view>
+        <view class="slogan">{{ studioData.slogan }}</view>
+      </view>
     </view>
   </view>
 </template>
@@ -18,7 +25,7 @@ import { onPullDownRefresh } from "@dcloudio/uni-app";
 const studioData = ref({
   name: "",
   slogan: "",
-  description: "", // 富文本字段
+  description: "",
 });
 
 const loading = ref(true);
@@ -76,54 +83,87 @@ onPullDownRefresh(() => {
 
 <style scoped lang="scss">
 .about-container {
-  padding: 30rpx 30rpx 80rpx;
-  background: #f9f9f9;
+  padding: 60rpx 30rpx 80rpx;
+  background: linear-gradient(180deg, #fdfbfb, #ebedee);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .studio-card {
+    width: 100%;
+    max-width: 700rpx;
+    background: #ffffff;
+    border-radius: 20rpx;
+    box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.06);
+    padding: 20rpx 20rpx;
+    text-align: center;
+    margin-top: 20rpx;
+  }
+
+  // .title-container {
+  //   margin-bottom: 24rpx;
+  // }
 
   .title {
-    font-size: 52rpx;
+    font-size: 60rpx;
     font-weight: bold;
-    text-align: center;
     background: linear-gradient(90deg, #ff7e5f, #feb47b);
     -webkit-background-clip: text;
     color: transparent;
-    margin-bottom: 10rpx;
+    display: inline-block;
+  }
+
+  .title-border {
+    width: 80rpx;
+    height: 8rpx;
+    margin: 12rpx auto 0;
+    background: linear-gradient(90deg, #ff7e5f, #feb47b);
+    border-radius: 4rpx;
   }
 
   .slogan {
-    font-size: 26rpx;
-    text-align: center;
-    color: #666;
-    margin-bottom: 50rpx;
-    text-shadow: 2rpx 2rpx 6rpx rgba(0, 0, 0, 0.1);
+    font-size: 28rpx;
+    color: #777;
+    // font-style: italic;
+    // margin-top: 10rpx;
+    letter-spacing: 1rpx;
+  }
+
+  .rich-text-card {
+    width: 100%;
+    max-width: 700rpx;
+    background: #ffffff;
+    border-radius: 20rpx;
+    box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.06);
+    padding: 50rpx 40rpx;
   }
 
   .rich-text {
-    font-size: 30rpx;
+    font-size: 32rpx;
     line-height: 1.8;
-    padding: 40rpx;
-    background: #fff;
-    border-radius: 16rpx;
-    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+    color: #444;
 
     img {
       width: 100%;
-      border-radius: 12rpx;
-      margin: 20rpx 0;
+      border-radius: 16rpx;
+      margin: 30rpx 0;
     }
   }
 
   .loading {
     text-align: center;
-    padding: 80rpx 0;
-    font-size: 32rpx;
-    color: #bbb;
+    padding: 100rpx 0;
+    font-size: 34rpx;
+    color: #aaa;
   }
 }
 </style>
+
 <style>
 .rich-img {
   width: 100%;
-  border-radius: 10rpx;
+  border-radius: 16rpx;
   margin: 20rpx 0;
 }
 </style>

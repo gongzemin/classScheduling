@@ -1,60 +1,120 @@
 <template>
   <view class="home">
-    <home-header :studioInfo="studioInfo" v-if="studioInfo"></home-header>
-    <view class="main">
-      <home-overview :studioInfo="studioInfo"></home-overview>
-      <home-teachers></home-teachers>
-      <home-contact :studioInfo="studioInfo"></home-contact>
+    <!-- 加载中状态 -->
+    <view v-if="loading" class="loading-container">
+      <text class="loading-text">正在请求数据</text>
     </view>
+
+    <!-- 错误状态 -->
+    <view v-else-if="error" class="error-container">
+      <text>加载失败，请下拉刷新重试</text>
+    </view>
+
+    <!-- 正常显示内容 -->
+    <template v-else>
+      <home-header :studioInfo="studioInfo"></home-header>
+      <view class="main">
+        <home-overview :modules="studioInfo.modules"></home-overview>
+        <home-teachers></home-teachers>
+        <home-contact :studioInfo="studioInfo"></home-contact>
+      </view>
+    </template>
   </view>
 </template>
 
 <script setup>
-const db = uniCloud.database();
 import { reactive, ref } from "vue";
+const db = uniCloud.database();
 let studioInfo = reactive({});
-uni.showLoading();
-db.collection("studio")
-  .get({
-    getOne: true,
-  })
-  .then((res) => {
-    uni.hideLoading();
-    if (res.result.errCode === 0) {
-      Object.assign(studioInfo, res.result.data);
-    }
-    console.log("res--studio-", studioInfo);
-  })
-  .catch((err) => {
-    uni.hideLoading();
-  });
+let loading = ref(true); // 加载状态
+let error = ref(false); // 错误状态
+
+const getStudioInfo = () => {
+  loading.value = true;
+  error.value = false;
+  db.collection("studio")
+    .get({ getOne: true })
+    .then((res) => {
+      loading.value = false;
+      if (res.result.errCode === 0) {
+        console.log("res", res.result.data);
+        Object.assign(studioInfo, res.result.data);
+      } else {
+        error.value = true;
+      }
+    })
+    .catch((err) => {
+      loading.value = false;
+      error.value = true;
+    });
+};
+
+// 初始化加载
+getStudioInfo();
+
+// 下拉刷新
+uni.$on("onPullDownRefresh", () => {
+  getStudioInfo();
+  uni.stopPullDownRefresh(); // 停止下拉刷新动画
+});
 </script>
 
 <style lang="scss">
 .home {
-  background-color: #f0f0f0; //#e7f1fc;
+  background-color: #f0f0f0;
   overflow: hidden;
   .main {
     padding: 20rpx;
   }
-}
 
-.logo {
-  height: 200rpx;
-  width: 200rpx;
-  margin-top: 200rpx;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 50rpx;
-}
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 28rpx;
+    color: #333;
+  }
 
-.text-area {
-  display: flex;
-  justify-content: center;
-}
+  .loading-text {
+    font-size: 32rpx;
+    color: #666;
+    display: inline-block;
+    position: relative;
+    animation: text-slide 1.5s ease-in-out infinite,
+      text-fade 1.5s ease-in-out infinite;
+  }
 
-.title {
-  font-size: 36rpx;
-  color: #8f8f94;
+  /* 文字的淡入淡出动画 */
+  @keyframes text-fade {
+    0%,
+    100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  /* 文字左右滑动动画 */
+  @keyframes text-slide {
+    0% {
+      transform: translateX(-10px);
+    }
+    50% {
+      transform: translateX(10px);
+    }
+    100% {
+      transform: translateX(-10px);
+    }
+  }
+
+  .error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #8f8f94;
+  }
 }
 </style>

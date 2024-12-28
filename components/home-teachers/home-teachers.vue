@@ -91,9 +91,13 @@ const onScroll = (e) => {
 
 const viewDetails = (teacher) => {
   // 跳转到教师详情页面
-  uni.navigateTo({
-    url: `/pages/teacherDetail/teacherDetail?id=${teacher.name}`,
+  uni.previewImage({
+    current: teacher.courseTeacherPic, // 当前显示的图片，传入点击的图片
+    urls: visibleTeachers.value.map((img) => img.courseTeacherPic), // 需要展示的所有图片
   });
+  // uni.navigateTo({
+  //   url: `/pages/teacherDetail/teacherDetail?id=${teacher.name}`,
+  // });
 };
 </script>
 
@@ -108,7 +112,7 @@ const viewDetails = (teacher) => {
       display: inline-block;
       background-color: white;
       border-radius: 8rpx;
-      box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2);
+      // box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2);
       margin-right: 16rpx; /* 卡片间距 */
       .avatar {
         width: 100%;

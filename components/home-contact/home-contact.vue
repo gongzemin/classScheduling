@@ -17,10 +17,10 @@
           </text>
         </view>
       </view>
-      <view class="info">
+      <view class="info mb-0" @click="openMap">
         <uni-icons type="location-filled" size="20" class="mr-4"></uni-icons>
         <!-- <uni-icons type="location" size="20"></uni-icons> -->
-        <text class="content address" @click="openMap">
+        <text class="content address">
           {{ studioInfo.address }}
         </text>
       </view>
@@ -47,8 +47,9 @@ const props = defineProps({
 
 // Navigate to the built-in map with the address
 const openMap = () => {
+  const { latitude, longitude } = props.studioInfo.lngLat;
   uni.navigateTo({
-    url: "/pages/address/address", //?address=" + address.value, // Assuming you have a map page
+    url: `/pages/address/address?longitude=${longitude}&latitude=${latitude}`, //?address=" + address.value, // Assuming you have a map page
   });
 };
 
@@ -84,7 +85,7 @@ const copyWechatId = () => {
 .contact-card {
   padding: 40rpx 20rpx;
   border-radius: 10rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  // box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
   background-color: #ffffff;
 }
 

@@ -73,7 +73,9 @@ const fetchReservations = async (type: "future" | "past") => {
       user_id: userInfo.userId, // 替换为实际用户 ID
       reserve_class_date: condition,
     })
+    .orderBy("reserve_class_date", "desc") // Sort by reserve_class_date in descending order
     .getTemp();
+  //
 
   const classTemp = db
     .collection("class-schedule")
@@ -106,7 +108,8 @@ const handleTabChange = async (tab: string) => {
   cancelReservations.value = [];
   historyReservations.value = [];
   if (tab === "historyReservations") {
-    historyReservations.value = await fetchReservations("past");
+    let data = await fetchReservations("past");
+    historyReservations.value = data; // .reverse();
     if (todayPastReservations.value.length) {
       todayPastReservations.value.forEach((item) => {
         historyReservations.value.shift(item);

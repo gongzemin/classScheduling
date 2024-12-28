@@ -22,7 +22,7 @@ const props = defineProps({
 });
 
 const bannerList = computed(() => {
-  return props.studioInfo.banner;
+  return props.studioInfo.banner && props.studioInfo.banner.slice(0, 4);
 });
 
 // uniCloud

@@ -57,7 +57,7 @@
   </view>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, reactive, onMounted, computed } from "vue";
 
 const db = uniCloud.database();
@@ -150,7 +150,7 @@ const getUser = async () => {
   }
 };
 
-const onChooseAvatar = async (e: any) => {
+const onChooseAvatar = async (e) => {
   const tempFilePath = e.detail.avatarUrl; // 获取临时路径
   userInfo.avatar = e.detail.avatarUrl;
   console.log("临时路径:", tempFilePath);
@@ -216,12 +216,12 @@ const menuItems = ref([
     icon: "\ue693",
     type: "iconfont",
   },
-  {
-    label: "联系客服",
-    path: "",
-    icon: "chat",
-    action: "contactCustomerService",
-  },
+  // {
+  //   label: "联系客服",
+  //   path: "",
+  //   icon: "chat",
+  //   action: "contactCustomerService",
+  // },
   // { label: "设置", path: "settings", icon: "gear" },
   // { label: "意见反馈", path: "feedback", icon: "mail-open" },
   { label: "退出登录", path: "", icon: "\ue61d", type: "iconfont" },
@@ -257,14 +257,20 @@ const encryptMobile = computed(() => {
   return userInfo.mobile.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2");
 });
 
-const navigateTo = (path: string) => {
-  if (path) {
-    uni.navigateTo({
-      url: path,
-    });
-  } else {
-    logout();
-  }
+const navigateTo = (path) => {
+  uni.navigateTo({
+    url: path,
+  });
+  // if (path && userInfo.role === "superAdmin") {
+  //   uni.navigateTo({
+  //     url: path,
+  //   });
+  // } else {
+  //   uni.showToast({
+  //     title: "抱歉，暂无权限",
+  //     icon: "none",
+  //   });
+  // }
 };
 
 // 跳转到登录页
