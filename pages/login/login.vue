@@ -190,11 +190,6 @@ const fetchStudioData = async () => {
 
 // 页面挂载时加载数据
 onMounted(() => {
-  console.log("1220000000000");
-  handleExistingUser(
-    { _id: "6770565d8b0da48697c1283a", avatar: "", nickname: "" },
-    "15112653200"
-  );
   fetchStudioData();
 });
 
