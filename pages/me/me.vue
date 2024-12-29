@@ -59,7 +59,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed } from "vue";
-
+import { onLoad, onShow } from "@dcloudio/uni-app";
 const db = uniCloud.database();
 const collection = db.collection("users");
 
@@ -120,21 +120,28 @@ const userInfo = reactive({
 // 获取用户信息的方法
 const getUser = async () => {
   try {
-    console.log("userinfo.mobile", userInfo.mobile);
-    const queryRes = await collection
+    console.log("userinfo", userInfo);
+    // 用户第一次设置用户名不获取 刷新的时候显示不出来
+    const queryRes = await db
+      .collection("users")
       .where({ mobile: userInfo.mobile })
-      .field("mobile,role")
+      .field("mobile,role,avatar,nickname")
       .get();
 
-    console.log("queryRes----", queryRes, userInfo.mobile);
+    console.log("queryRes----", queryRes, userInfo);
     if (queryRes.result.errCode === 0 && queryRes.result.data?.length) {
-      const { role } = queryRes.result.data[0];
+      const { role, avatar, nickname, _id } = queryRes.result.data[0];
 
       userInfo.role = role;
+      userInfo.avatar = avatar;
+      userInfo.nickname = nickname;
+      userInfo.userId = _id;
       const existingUserInfo = uni.getStorageSync("userInfo") || {};
       uni.setStorageSync("userInfo", {
         ...existingUserInfo,
         role,
+        avatar,
+        nickname,
       });
       console.log("获取到的 userId:", userInfo.userId);
       return true;
@@ -151,7 +158,7 @@ const getUser = async () => {
 const onChooseAvatar = async (e) => {
   const tempFilePath = e.detail.avatarUrl; // 获取临时路径
   userInfo.avatar = e.detail.avatarUrl;
-  console.log("临时路径:", tempFilePath);
+  console.log("临时路径:", tempFilePath, userInfo);
 
   // 提取文件名（包含扩展名）
   const fileName = tempFilePath.substring(tempFilePath.lastIndexOf("/") + 1);
@@ -356,13 +363,14 @@ const onNameChange = async (e) => {
 };
 
 onMounted(async () => {
+  console.log("onMouoad2222");
   const storedUserInfo = uni.getStorageSync("userInfo");
   // 回显用户电话 头像 昵称
   console.log("storedUserInfo", storedUserInfo);
-  if (storedUserInfo && storedUserInfo.avatar) {
+  if (storedUserInfo && storedUserInfo?.avatar) {
     userInfo.avatar = storedUserInfo.avatar;
   }
-  if (storedUserInfo && storedUserInfo.nickname) {
+  if (storedUserInfo && storedUserInfo?.nickname) {
     userInfo.nickname = storedUserInfo.nickname;
   } else {
     userInfo.nickname = "请输入昵称";

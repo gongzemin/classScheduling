@@ -235,7 +235,6 @@ const getReserveUser = (course, targetDate) => {
     })
     .getTemp();
   let userTemp = db.collection("users").field("_id, avatar").getTemp();
-  uni.hideLoading();
   return db
     .collection(reserveTemp, userTemp)
     .orderBy("reserve_time desc")
@@ -244,7 +243,6 @@ const getReserveUser = (course, targetDate) => {
 };
 
 const updateUser = async () => {
-  uni.showLoading();
   console.log("updateUser");
   const res = await getReserveUser(courseInfo, courseInfo.isoDate); // 获取预约用户信息
   if (res.result.errCode === 0) {
@@ -274,20 +272,24 @@ function getAvatar(item) {
   return item.avatar || "../../static/images/defAvatar.png";
 }
 
-const handleBook = () => {
-  const {
-    userId = "",
-    avatar = "",
-    cardType = "",
-    _id: cardId = "",
-  } = userInfo || {};
+const handleBook = async () => {
+  // TODO 用户第一次登录的时候没有cardId
+  const { result } = await db
+    .collection("user-membership-card")
+    .where({ user_id: userInfo.userId })
+    .field("expirationDate,_id")
+    .get({ getOne: true });
+
+  const cardData = result?.data || {};
+  const { userId = "", avatar = "", cardType = "" } = userInfo || {};
+  console.log("handleBook", userInfo);
   // 调用云对象
   // TODO 这样有个问题 如果预约了 然后更换了用户头像 这时候显示的头像是不是最新的
   uniCloud
     .importObject("reserve")
     .bookCourse({
       userId,
-      cardId,
+      cardId: cardData._id,
       avatar,
       cardType,
       queryClassId: courseInfo._id,
@@ -296,7 +298,6 @@ const handleBook = () => {
     .then((res) => {
       const { code, message } = res;
       if (code === 200) {
-        uni.hideLoading();
         updateUser();
         uni.$emit("refreshList", { msg: "更新列表" });
 
@@ -307,13 +308,20 @@ const handleBook = () => {
       }
     })
     .catch((err) => {
-      uni.hideLoading();
       console.error("预约失败", err);
     });
 };
 
-const handleCancel = () => {
+const handleCancel = async () => {
+  const { result } = await db
+    .collection("user-membership-card")
+    .where({ user_id: userInfo.userId })
+    .field("expirationDate,_id")
+    .get({ getOne: true });
+
+  const cardData = result?.data || {};
   const { userId, cardType } = userInfo;
+  console.log("cardId", userInfo, cardData);
   // 调用云对象取消预约逻辑
   uniCloud
     .importObject("reserve")
@@ -321,11 +329,11 @@ const handleCancel = () => {
       userId,
       queryClassId: courseInfo._id,
       cardType,
+      cardId: cardData._id,
     })
     .then((res) => {
       const { code, message } = res;
       if (code === 200) {
-        uni.hideLoading();
         updateUser();
         uni.$emit("refreshList", { msg: "更新列表" });
         // uni.navigateBack();
@@ -335,19 +343,17 @@ const handleCancel = () => {
       }
     })
     .catch((err) => {
-      uni.hideLoading();
       console.error("取消预约失败", err);
     });
 };
 
 const bookCourse = async (val) => {
-  uni.showLoading({
-    mask: true,
-  });
+  // uni.showLoading({
+  //   mask: true,
+  // });
   const { userId, avatar, cardType } = userInfo;
   if (val === "预约") {
     // 如果是次卡，先检查用户的剩余次数
-
     handleBook();
   } else if (val === "取消预约") {
     handleCancel();

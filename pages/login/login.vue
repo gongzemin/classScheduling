@@ -55,11 +55,12 @@ const hideLoading = () => {
 // 获取手机号
 const getPhoneNumber = async (val) => {
   try {
+    showLoading();
     const { result } = await uniCloud.callFunction({
       name: "getPhoneNumber",
       data: { code: val.detail.code },
     });
-
+    hideLoading();
     if (!result.success) {
       uni.showToast({ title: "获取手机号失败", icon: "none" });
       return;
@@ -69,7 +70,7 @@ const getPhoneNumber = async (val) => {
     showLoading();
 
     const queryResult = await queryUserByMobile(mobile);
-
+    hideLoading();
     if (queryResult.length > 0) {
       await handleExistingUser(queryResult[0], mobile);
     } else {
@@ -78,8 +79,6 @@ const getPhoneNumber = async (val) => {
   } catch (error) {
     console.error("手机号获取流程失败:", error);
     uni.showToast({ title: "操作失败，请稍后再试", icon: "none" });
-  } finally {
-    hideLoading();
   }
 };
 
@@ -90,17 +89,19 @@ const queryUserByMobile = async (mobile) => {
     .where({ mobile })
     .field("mobile, avatar, nickname, role")
     .get();
-  console.log("queryUserByMobile", queryUserByMobile);
+
+  console.log("queryUserByMobile result:", result); // 修复误写
   return result.data || [];
 };
 
 // 处理已有用户的逻辑
 const handleExistingUser = async ({ _id, avatar, nickname, role }, mobile) => {
+  showLoading();
   const { result } = await db
     .collection("user-membership-card")
     .where({ user_id: _id })
     .get({ getOne: true });
-
+  hideLoading();
   // 存储用户信息
   const cardInfo = result.data || {};
   console.log("handleExistingUser", cardInfo, result);
@@ -118,6 +119,7 @@ const handleExistingUser = async ({ _id, avatar, nickname, role }, mobile) => {
 
 // 创建新用户及会员卡
 const createNewUserAndCard = async (mobile) => {
+  console.log("mobile", mobile);
   const currentDate = new Date();
   const expirationDate = new Date();
   expirationDate.setMonth(currentDate.getMonth() + 3);
@@ -132,8 +134,9 @@ const createNewUserAndCard = async (mobile) => {
     startDate: currentDate,
     expirationDate,
   };
-
+  // showLoading();
   const res = await db.collection("users").add(newUser);
+  // hideLoading();
   if (res.result.errCode === 0) {
     cardInfo.user_id = res.result.id;
     await db.collection("user-membership-card").add(cardInfo);
@@ -157,7 +160,7 @@ const showSuccessAndNavigate = (title) => {
     icon: "success",
     duration: 1500,
   });
-  uni.switchTab({ url: "/pages/me/me" });
+  uni.reLaunch({ url: "/pages/me/me" });
 };
 
 // 取消逻辑
@@ -167,8 +170,8 @@ const onCancel = () => {
 
 // 加载舞室信息
 const fetchStudioData = async () => {
-  uni.showLoading({ title: "" });
   try {
+    uni.showLoading({ title: "" });
     const res = await db
       .collection("studio")
       .field("name, slogan")
@@ -201,9 +204,11 @@ onLoad(() => {
       icon: "success",
       duration: 1500,
     });
-    uni.switchTab({
-      url: "/pages/index/index", // 主页路径，根据实际情况修改
-    });
+    setTimeout(() => {
+      uni.switchTab({
+        url: "/pages/index/index", // 修复页面切换问题
+      });
+    }, 500);
   }
 });
 </script>

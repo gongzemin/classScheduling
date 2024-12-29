@@ -41,23 +41,28 @@ const getWeekdayInChinese = (dayIndex) => {
 };
 
 // 数据获取：从云数据库获取课程列表
+let loading = false;
 const fetchCourses = async () => {
-  //     .orderBy("startTime", "asc")
   try {
+    if (!loading) {
+      loading = true;
+      // uni.showLoading({ title: "加载中...", mask: true });
+    }
     const res = await db.collection("class-schedule").get();
     if (res.result?.errCode === 0) {
       courseList.value = res.result.data || [];
-      console.log("Fetched courses:", courseList.value);
     } else {
-      console.error("Failed to fetch courses:", res.result?.errMsg);
+      uni.showToast({ title: "课程加载失败", icon: "none" });
     }
   } catch (error) {
-    console.error("Error fetching courses:", error);
+    uni.showToast({ title: "网络异常", icon: "none" });
   } finally {
-    uni.hideLoading();
+    if (loading) {
+      loading = false;
+      // uni.hideLoading();
+    }
   }
 };
-
 // 数据过滤：根据指定的星期过滤课程
 const filterCoursesByDay = (day) =>
   courseList.value.filter((course) => course.day === day);
@@ -194,19 +199,16 @@ const goNewCourse = () => {
 // 刷新课程列表
 const refresh = () => {
   console.log("Refresh triggered for:", props.dayOfTheWeek);
-  uni.showLoading({ mask: true });
   updateDayCourses(props.dayOfTheWeek, true); // 强制刷新课程数据
 };
 
 uni.$on("refreshList", () => {
   console.log("这个uni.on起作用吗");
-  uni.showLoading({ mask: false });
   updateDayCourses(props.dayOfTheWeek, true); // 强制刷新
 });
 
 // 挂载时初始化
 onMounted(() => {
-  uni.showLoading({ mask: false });
   updateDayCourses(props.dayOfTheWeek, true); // 强制刷新
 });
 

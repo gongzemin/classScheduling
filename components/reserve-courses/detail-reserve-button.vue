@@ -103,21 +103,42 @@ const getBtnStatusBaseDate = () => {
 };
 
 // 用户预约时的校验逻辑
-function checkMembershipValidity(expirationDate) {
-  const now = Date.now(); // 当前时间戳
-  const expirationTimestamp = new Date(expirationDate).getTime(); // 转换为时间戳
+const checkMembershipValidity = async () => {
+  try {
+    const { result } = await db
+      .collection("user-membership-card")
+      .where({ user_id: userInfo.userId })
+      .field("expirationDate,_id")
+      .get({ getOne: true });
 
-  if (now < expirationTimestamp) {
-    return true; // 返回成功标志
-  } else {
-    // 会员卡已过期
-    uni.showToast({
-      title: "会员卡已过期",
-      icon: "none",
+    const cardData = result?.data || {};
+    console.log("carD", cardData);
+    const existingUserInfo = uni.getStorageSync("userInfo") || {};
+
+    // 更新缓存中的 userInfo，避免 cardId 缺失
+    uni.setStorageSync("userInfo", {
+      ...existingUserInfo,
+      cardId: cardData._id || "", // 防止 _id 为 undefined
     });
-    return false; // 返回失败标志
+
+    const expirationTimestamp = new Date(
+      cardData.expirationDate || 0
+    ).getTime();
+    const now = Date.now();
+
+    if (now < expirationTimestamp) {
+      return true; // 会员卡有效
+    } else {
+      // 会员卡过期提示
+      uni.showToast({ title: "会员卡已过期", icon: "none" });
+      return false;
+    }
+  } catch (error) {
+    console.error("校验会员卡失败", error);
+    uni.showToast({ title: "校验失败，请稍后重试", icon: "none" });
+    return false;
   }
-}
+};
 
 /**
  * 检查用户次卡剩余次数
@@ -140,16 +161,15 @@ async function checkRemainingSessions(remainingSessions) {
 
 // 点击事件
 const bookCourse = async () => {
-  console.log("inner");
+  console.log("inner", userInfo);
   if (!userInfo || (userInfo && !userInfo.mobile)) {
     uni.navigateTo({
       url: "/pages/login/login",
     });
   } else {
-    const { expirationDate, cardType, userId } = userInfo;
+    const { cardType, userId } = userInfo;
     // 预约时调用
-    console.log("expirationDate", expirationDate);
-    if (checkMembershipValidity(expirationDate)) {
+    if (checkMembershipValidity()) {
       if (cardType === "sessionCard") {
         const hasSessions = await checkRemainingSessions(
           userInfo.remainingSessions
