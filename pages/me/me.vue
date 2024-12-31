@@ -295,16 +295,9 @@ const navigatePath = (item) => {
         icon: "none",
       });
     } else {
-      if (item.label === "上课记录") {
-        uni.showToast({
-          title: "功能开发中",
-          icon: "none",
-        });
-      } else {
-        uni.navigateTo({
-          url: item.path,
-        });
-      }
+      uni.navigateTo({
+        url: item.path,
+      });
     }
   }
   // if (path && userInfo.role === "superAdmin") {
