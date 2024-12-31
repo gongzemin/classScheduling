@@ -116,6 +116,7 @@ const userInfo = reactive({
 //   cardType: "timeCard",
 // });
 
+let isUserLoaded = false; // 标志是否已加载用户信息
 // 获取用户电话获取用户id
 // 获取用户信息的方法
 const getUser = async () => {
@@ -142,7 +143,9 @@ const getUser = async () => {
         role,
         avatar,
         nickname,
+        userId: _id,
       });
+      isUserLoaded = true; // 标记用户信息已加载
       console.log("获取到的 userId:", userInfo.userId);
       return true;
     } else {
@@ -266,6 +269,15 @@ const navigatePath = (item) => {
   if (!item.path) {
     logout();
   } else {
+    if (!isUserLoaded) {
+      // 如果用户信息尚未加载，提示用户等待
+      uni.showToast({
+        title: "正在加载用户信息，请稍后...",
+        icon: "none",
+      });
+      return;
+    }
+
     if (item.label.includes("管理") && userInfo.role !== "superAdmin") {
       uni.showToast({
         title: "抱歉，暂无权限",

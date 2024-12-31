@@ -85,6 +85,7 @@ const fetchReservations = async (type: "future" | "past") => {
     .getTemp();
 
   const { result } = await db.collection(reserveTemp, classTemp).get();
+  console.log("result---", result, userInfo.userId);
   uni.hideLoading();
 
   const formattedReservations = result.data.map((item: Reservation) => {

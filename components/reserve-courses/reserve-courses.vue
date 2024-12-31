@@ -14,7 +14,7 @@
 
 <script setup>
 import { onMounted, ref, watch, computed } from "vue";
-
+import { onPullDownRefresh } from "@dcloudio/uni-app";
 import courseCard from "./course-card.vue";
 import { formatCourseTime } from "../../common/util";
 
@@ -210,6 +210,11 @@ uni.$on("refreshList", () => {
 // 挂载时初始化
 onMounted(() => {
   updateDayCourses(props.dayOfTheWeek, true); // 强制刷新
+});
+
+onPullDownRefresh(() => {
+  updateDayCourses(props.dayOfTheWeek, true); // 强制刷新
+  uni.stopPullDownRefresh(); // 停止下拉刷新动画
 });
 
 // 这里应该监听日期 而不是周几 不然后面的周几和现在的周几用户数据一样

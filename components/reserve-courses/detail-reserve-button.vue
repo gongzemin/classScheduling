@@ -108,7 +108,7 @@ const checkMembershipValidity = async () => {
     const { result } = await db
       .collection("user-membership-card")
       .where({ user_id: userInfo.userId })
-      .field("expirationDate,_id")
+      .field("expirationDate,_id, remainingSessions")
       .get({ getOne: true });
 
     const cardData = result?.data || {};
@@ -119,6 +119,7 @@ const checkMembershipValidity = async () => {
     uni.setStorageSync("userInfo", {
       ...existingUserInfo,
       cardId: cardData._id || "", // 防止 _id 为 undefined
+      remainingSessions: cardData.remainingSessions,
     });
 
     const expirationTimestamp = new Date(

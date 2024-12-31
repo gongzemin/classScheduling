@@ -12,7 +12,8 @@
     {
       "path": "pages/reserve/reserve",
       "style": {
-        "navigationBarTitleText": "预约"
+        "navigationBarTitleText": "预约",
+        "enablePullDownRefresh": true
       }
     },
     {
@@ -114,18 +115,16 @@
           }
         },
         {
-        	"path" : "album/album",
-        	"style" : 
-        	{
-        		"navigationBarTitleText" : "相册"
-        	}
+          "path": "album/album",
+          "style": {
+            "navigationBarTitleText": "相册"
+          }
         },
         {
-        	"path" : "promotion/promotion",
-        	"style" : 
-        	{
-        		"navigationBarTitleText" : "优惠活动"
-        	}
+          "path": "promotion/promotion",
+          "style": {
+            "navigationBarTitleText": "优惠活动"
+          }
         }
       ]
     },

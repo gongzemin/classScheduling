@@ -24,6 +24,8 @@
 
 <script setup>
 import { reactive, ref } from "vue";
+import { onPullDownRefresh } from "@dcloudio/uni-app";
+
 const db = uniCloud.database();
 let studioInfo = reactive({});
 let loading = ref(true); // 加载状态
@@ -39,6 +41,21 @@ const getStudioInfo = () => {
       if (res.result.errCode === 0) {
         console.log("res", res.result.data);
         Object.assign(studioInfo, res.result.data);
+        // 使用异步的 uni.setStorage
+        uni.setStorage({
+          key: "studioInfo",
+          data: {
+            cancelDeadlineHours: res.result.data.cancelDeadlineHours,
+            minParticipants: res.result.data.minParticipants,
+            address: res.result.data.address,
+          },
+          success: () => {
+            console.log("数据已成功存储");
+          },
+          fail: (error) => {
+            console.error("存储失败", error);
+          },
+        });
       } else {
         error.value = true;
       }
@@ -52,8 +69,8 @@ const getStudioInfo = () => {
 // 初始化加载
 getStudioInfo();
 
-// 下拉刷新
-uni.$on("onPullDownRefresh", () => {
+// 下拉刷新 不然教师列表新增之后 不会刷新
+onPullDownRefresh(() => {
   getStudioInfo();
   uni.stopPullDownRefresh(); // 停止下拉刷新动画
 });

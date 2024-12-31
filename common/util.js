@@ -32,7 +32,7 @@ export function formatDateToYYYYMMDD(dateObj) {
   const month = String(dateObj.getMonth() + 1).padStart(2, "0"); // 月份从 0 开始
   const day = String(dateObj.getDate()).padStart(2, "0");
 
-  return `${year}-${month}-${day}`;
+  return `${year}/${month}/${day}`;
 }
 
 // 日期格式化函数  2025-06-30T23:59:59Z 格式的日期转换成 yyyy-mm-dd hh:mm:ss

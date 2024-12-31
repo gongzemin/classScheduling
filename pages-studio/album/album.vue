@@ -27,13 +27,14 @@
 
 <script setup lang="ts">
 import { ref, reactive } from "vue";
+import { onPullDownRefresh } from "@dcloudio/uni-app";
 
 // 响应式变量
 const loading = ref(true);
 const error = ref(false);
 const images = ref<string[]>([]); // 保存从数据库获取的图片路径
 
-// 获取相册图片数据
+// 获取相册图片数据 应该不需要自己请求数据的 如果用了pinia
 const getStudioInfo = async () => {
   loading.value = true;
   error.value = false;
@@ -64,7 +65,7 @@ const openImage = (image: string) => {
 getStudioInfo();
 
 // 下拉刷新
-uni.$on("onPullDownRefresh", () => {
+onPullDownRefresh(() => {
   getStudioInfo();
   uni.stopPullDownRefresh(); // 停止下拉刷新动画
 });

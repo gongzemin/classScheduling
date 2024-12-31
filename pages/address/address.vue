@@ -4,9 +4,9 @@
       <view class="page-section page-section-gap">
         <map
           style="width: 100%; height: 100vh"
-          :latitude="covers[0]?.latitude"
-          :longitude="covers[0]?.longitude"
-          :covers="covers"></map>
+          :latitude="markers[0]?.latitude"
+          :longitude="markers[0]?.longitude"
+          :markers="markers"></map>
       </view>
     </view>
   </view>
@@ -17,23 +17,19 @@ import { ref } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
 
 // 覆盖物数组，初始为空
-const covers = ref([
-  {
-    latitude: 0,
-    longitude: 0,
-    iconPath: "../../static/images/location.png",
-  },
-]);
+const markers = ref([]);
 
 // 页面加载时接收参数
 onLoad((options) => {
   const { latitude, longitude } = options;
   if (latitude && longitude) {
-    covers.value = [
+    markers.value = [
       {
-        latitude: Number(latitude),
-        longitude: Number(longitude),
-        iconPath: "../../static/images/location.png",
+        id: 1,
+        latitude,
+        longitude,
+        width: 40, // 必填宽度
+        height: 60, // 必填高度
       },
     ];
   } else {

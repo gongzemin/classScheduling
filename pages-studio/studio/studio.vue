@@ -35,6 +35,16 @@
           <text>{{ studio.wechatId }}</text>
         </view>
 
+        <view class="info-item">
+          <text class="mr-10">最少开课人数</text>
+          <text>{{ studio.minParticipants }}人</text>
+        </view>
+
+        <view class="info-item">
+          <text class="mr-10">可提前取消时长</text>
+          <text>{{ studio.cancelDeadlineHours }}小时</text>
+        </view>
+
         <map
           v-if="studio.lngLat.longitude"
           class="map"
@@ -82,6 +92,8 @@ const fetchStudioData = async () => {
           latitude: studio.value.lngLat.latitude,
           longitude: studio.value.lngLat.longitude,
           title: studio.value.name,
+          width: 40, // 必填宽度
+          height: 60, // 必填高度
         },
       ];
     } else {

@@ -35,6 +35,22 @@
           :localdata="moduleOptions"
           multiple />
       </uni-forms-item>
+      <uni-forms-item label="最低开课人数" required name="minParticipants">
+        <uni-easyinput
+          v-model="formData.minParticipants"
+          type="number"
+          placeholder="请输入最低开课人数" />
+      </uni-forms-item>
+
+      <uni-forms-item
+        label="取消截止时间 (小时)"
+        required
+        name="cancelDeadlineHours">
+        <uni-easyinput
+          v-model="formData.cancelDeadlineHours"
+          type="number"
+          placeholder="请输入取消截止时间" />
+      </uni-forms-item>
 
       <uni-forms-item
         label="请上传舞室相册 前3张为首页轮播图"
@@ -112,6 +128,8 @@ const formData = ref({
     longitude: null,
     latitude: null,
   },
+  minParticipants: 3,
+  cancelDeadlineHours: 1,
 });
 const queryId = ref();
 const submitting = ref(false);
@@ -156,6 +174,18 @@ const rules = {
   },
   modules: {
     rules: [{ required: true, errorMessage: "请选择至少一个功能模块" }],
+  },
+  minParticipants: {
+    rules: [
+      { required: true, errorMessage: "最低开课人数不能为空" },
+      { pattern: /^[1-9]\d*$/, errorMessage: "请输入有效的正整数" },
+    ],
+  },
+  cancelDeadlineHours: {
+    rules: [
+      { required: true, errorMessage: "取消截止时间不能为空" },
+      { pattern: /^\d+(\.\d+)?$/, errorMessage: "请输入有效的数字 (允许小数)" },
+    ],
   },
   banner: {
     rules: [{ required: true, errorMessage: "请至少上传一张图片" }],
@@ -289,6 +319,7 @@ const addData = async () => {
   });
 
   try {
+    console.log("formData-----", formData.value);
     const res = await db.collection("studio").limit(1).get();
     const studioExists = res.result.data.length > 0;
 
@@ -300,6 +331,8 @@ const addData = async () => {
         .doc(studioId)
         .update({
           ...formData.value,
+          minParticipants: Number(formData.value.minParticipants),
+          cancelDeadlineHours: Number(formData.value.cancelDeadlineHours),
           // ...formDataWithoutBanner,
           // banner: formattedBanner,
         });
@@ -311,6 +344,8 @@ const addData = async () => {
       // 新增数据
       await db.collection("studio").add({
         ...formData.value,
+        minParticipants: Number(formData.value.minParticipants),
+        cancelDeadlineHours: Number(formData.value.cancelDeadlineHours),
         // ...formDataWithoutBanner,
         // banner: formattedBanner,
       });
@@ -369,7 +404,6 @@ const onStatuschange = (e) => {
 
 // 提交表单
 const submitForm = () => {
-  submitting.value = true;
   formRef.value
     ?.validate()
     .then(() => {
@@ -386,6 +420,8 @@ const submitForm = () => {
             title: "发布中...",
           });
           console.log("formData", formData);
+          // 表单验证成功才禁用提交 不然点击校验没通过  修改了这时候就不可以提交了
+          submitting.value = true;
           addData();
         },
       });
@@ -406,23 +442,10 @@ const getDetail = async () => {
     const res = await db.collection("studio").doc(queryId.value).get();
 
     if (res.result.data.length > 0) {
-      const studio = res.result.data[0];
-
-      // Copy the fetched data into formData
-      formData.value = {
-        name: studio.name || "",
-        phone: studio.phone || "",
-        slogan: studio.slogan || "",
-        wechatId: studio.wechatId || "",
-        address: studio.address || "",
-        modules: studio.modules || [],
-        banner: studio.banner || [],
-        description: studio.description || "",
-        lngLat: studio.lngLat || { longitude: null, latitude: null },
-      };
+      formData.value = res.result.data[0];
 
       editorCtx.value.setContents({
-        html: studio.description,
+        html: res.result.data[0].description,
         success: () => {
           console.log("内容设置成功");
         },

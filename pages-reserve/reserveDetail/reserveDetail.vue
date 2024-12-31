@@ -298,6 +298,11 @@ const handleBook = async () => {
     .then((res) => {
       const { code, message } = res;
       if (code === 200) {
+        const existingUserInfo = uni.getStorageSync("userInfo") || {};
+        uni.setStorageSync("userInfo", {
+          ...existingUserInfo,
+          remainingSessions: Number(existingUserInfo.remainingSessions) - 1,
+        });
         updateUser();
         uni.$emit("refreshList", { msg: "更新列表" });
 
@@ -347,6 +352,43 @@ const handleCancel = async () => {
     });
 };
 
+function checkCourseCancellation(courseTimeStr) {
+  const now = new Date(); // 当前时间
+  const courseDate = new Date(courseTimeStr.split(" ")[0]); // 提取日期部分
+  const startTime = courseTimeStr.split(" ")[1].split("-")[0]; // 提取开始时间
+  const [startHour, startMinute] = startTime.split(":").map(Number); // 提取小时和分钟
+
+  // 设置课程开始前一小时
+  const courseStartBefore1Hour = new Date(courseDate);
+
+  // 获取存储中的 cancelDeadlineHours
+  const studioInfo = uni.getStorageSync("studioInfo");
+  const cancelDeadlineHours = studioInfo
+    ? Number(studioInfo.cancelDeadlineHours)
+    : 1; // 使用 Number() 转换为数字，默认为1小时
+
+  courseStartBefore1Hour.setHours(
+    startHour - cancelDeadlineHours,
+    startMinute,
+    0,
+    0
+  );
+  console.log("courseStartBefore1Hour", courseStartBefore1Hour);
+
+  // 检查是否是今天
+  const isToday = now.toDateString() === courseDate.toDateString();
+
+  // 检查当前时间是否大于课程开始前1小时
+  if (isToday && now > courseStartBefore1Hour) {
+    uni.showToast({
+      title: "离上课时间不足1小时，不可以取消",
+      icon: "none",
+    });
+    return false; // 不允许取消
+  }
+  return true; // 允许取消
+}
+
 const bookCourse = async (val) => {
   // uni.showLoading({
   //   mask: true,
@@ -356,7 +398,11 @@ const bookCourse = async (val) => {
     // 如果是次卡，先检查用户的剩余次数
     handleBook();
   } else if (val === "取消预约") {
-    handleCancel();
+    const canCancel = checkCourseCancellation(courseInfo.time);
+    // console.log("取消", courseInfo);
+    if (canCancel) {
+      handleCancel();
+    }
   }
 };
 

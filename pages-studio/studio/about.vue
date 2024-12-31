@@ -77,6 +77,7 @@ onMounted(() => {
 // 下拉刷新
 onPullDownRefresh(() => {
   fetchStudioData();
+  uni.stopPullDownRefresh(); // 停止下拉刷新动画
 });
 </script>
 
