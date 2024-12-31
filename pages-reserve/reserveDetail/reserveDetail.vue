@@ -373,7 +373,6 @@ function checkCourseCancellation(courseTimeStr) {
     0,
     0
   );
-  console.log("courseStartBefore1Hour", courseStartBefore1Hour);
 
   // 检查是否是今天
   const isToday = now.toDateString() === courseDate.toDateString();
@@ -381,7 +380,7 @@ function checkCourseCancellation(courseTimeStr) {
   // 检查当前时间是否大于课程开始前1小时
   if (isToday && now > courseStartBefore1Hour) {
     uni.showToast({
-      title: "离上课时间不足1小时，不可以取消",
+      title: `离上课时间不足${cancelDeadlineHours}小时，不可以取消`,
       icon: "none",
     });
     return false; // 不允许取消
@@ -398,6 +397,7 @@ const bookCourse = async (val) => {
     // 如果是次卡，先检查用户的剩余次数
     handleBook();
   } else if (val === "取消预约") {
+    // courseInfo.time = "2024/12/31 12:10";
     const canCancel = checkCourseCancellation(courseInfo.time);
     // console.log("取消", courseInfo);
     if (canCancel) {

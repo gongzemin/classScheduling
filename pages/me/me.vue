@@ -33,10 +33,12 @@
         :key="index"
         class="card-item"
         @click="navigatePath(item)">
-        <uni-icons size="24" v-if="item.type" fontFamily="iconfont">
-          {{ item.icon }}
-        </uni-icons>
-        <uni-icons :type="item.icon" size="30" v-else></uni-icons>
+        <view class="icon-wrapper">
+          <uni-icons :size="item.size" v-if="item.type" fontFamily="iconfont">
+            {{ item.icon }}
+          </uni-icons>
+          <uni-icons :type="item.icon" :size="item.size" v-else></uni-icons>
+        </view>
         <text>{{ item.label }}</text>
       </view>
     </view>
@@ -47,10 +49,12 @@
         :key="index"
         class="card-item"
         @click="navigatePath(item)">
-        <uni-icons size="24" v-if="item.type" fontFamily="iconfont">
-          {{ item.icon }}
-        </uni-icons>
-        <uni-icons :type="item.icon" size="30" v-else></uni-icons>
+        <view class="icon-wrapper">
+          <uni-icons :size="item.size" v-if="item.type" fontFamily="iconfont">
+            {{ item.icon }}
+          </uni-icons>
+          <uni-icons :type="item.icon" :size="item.size" v-else></uni-icons>
+        </view>
         <text>{{ item.label }}</text>
       </view>
     </view>
@@ -212,17 +216,20 @@ const menuItems = ref([
     label: "已约",
     path: "/pages-me-dashboard/myReserve/myReserve",
     icon: "calendar",
+    size: 27,
   },
   {
     label: "上课记录",
     path: "/pages-me-dashboard/classAttendanceRecord/classAttendanceRecord",
     icon: "info",
+    size: 29,
   },
   {
     label: "会员卡",
     path: "/pages-membership-card/my-membership-card/my-membership-card",
     icon: "\ue693",
     type: "iconfont",
+    size: 23,
   },
   // {
   //   label: "联系客服",
@@ -232,7 +239,7 @@ const menuItems = ref([
   // },
   // { label: "设置", path: "settings", icon: "gear" },
   // { label: "意见反馈", path: "feedback", icon: "mail-open" },
-  { label: "退出登录", path: null, icon: "\ue61d", type: "iconfont" },
+  { label: "退出登录", path: null, icon: "\ue61d", type: "iconfont", size: 24 },
 ]);
 
 const adminItems = ref([
@@ -241,23 +248,27 @@ const adminItems = ref([
     path: "/pages-courses/courseList/courseList",
     icon: "\ue600",
     type: "iconfont",
+    size: 20,
   },
   {
     label: "学员管理",
     path: "/pages-courses/courseList/courseList",
     icon: "staff",
+    size: 28,
   },
   {
     label: "教师管理",
     path: "/pages-courses/courseList/courseList",
     icon: "\ue7d0",
     type: "iconfont",
+    size: 24,
   },
   {
     label: "舞室信息管理",
     path: "/pages-studio/studio/studio",
     icon: "shop",
     action: "contactCustomerService",
+    size: 28,
   },
 ]);
 
@@ -476,6 +487,12 @@ button::after {
       align-items: center;
       padding: 20rpx 0;
       width: 32%;
+      .icon-wrapper {
+        height: 60rpx;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
     }
 
     .card-item:last-child {
