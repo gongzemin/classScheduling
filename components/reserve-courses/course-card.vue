@@ -3,6 +3,7 @@
     <!-- 背景展示老师图片 -->
     <view
       class="course-background"
+      :class="isCancelled ? 'cancel-gray' : ''"
       :style="{ backgroundImage: `url(${courseInfo.courseTeacherPic})` }">
       <!-- 透明蒙版 -->
       <view class="overlay"></view>
@@ -47,14 +48,22 @@
         </view>
       </view>
 
-      <view v-if="courseInfo.isReserved" class="reserve-btn">已预约</view>
-      <!-- 预约按钮 -->
+      <!-- 已取消 badge -->
+      <view v-if="isCancelled" class="cancelled-badge animate-badge">
+        已取消
+      </view>
+
+      <view v-if="courseInfo.isReserved && !isCancelled" class="reserve-btn">
+        已预约
+      </view>
+
+      <!-- 预约按钮 - 如果课程已取消，不显示预约按钮 -->
       <reserve-button
+        v-else-if="!isCancelled"
         :time="courseInfo.time"
         :clickDate="clickDate"
         :classId="courseInfo._id"
-        class="reserve-btn"
-        v-else />
+        class="reserve-btn" />
 
       <!-- 管理员操作按钮 -->
       <view v-if="isAdmin" @click.stop="showMore">
@@ -73,98 +82,6 @@ import { ref, computed, reactive } from "vue";
 import reserveUserList from "./reserve-user-list.vue";
 import reserveButton from "./card-reserve-button.vue";
 
-const tt = [
-  {
-    user_id: "6763d1654b9247079917bee5",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-  },
-  {
-    user_id: "67526d0789bd27450be85c4e",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-  },
-  {
-    user_id: "6763d1654b9247079917bee5",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-  },
-  {
-    user_id: "67526d0789bd27450be85c4e",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-  },
-  {
-    user_id: "6763d1654b9247079917bee5",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-  },
-  {
-    user_id: "67526d0789bd27450be85c4e",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-  },
-  {
-    user_id: "6763d1654b9247079917bee5",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-  },
-  {
-    user_id: "67526d0789bd27450be85c4e",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-  },
-  {
-    user_id: "6763d1654b9247079917bee5",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-  },
-  {
-    user_id: "67526d0789bd27450be85c4e",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-  },
-  {
-    user_id: "6763d1654b9247079917bee5",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-  },
-  {
-    user_id: "67526d0789bd27450be85c4e",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-  },
-  {
-    user_id: "6763d1654b9247079917bee5",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-  },
-  {
-    user_id: "67526d0789bd27450be85c4e",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-  },
-  {
-    user_id: "6763d1654b9247079917bee5",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-  },
-  {
-    user_id: "67526d0789bd27450be85c4e",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-  },
-  {
-    user_id: "6763d1654b9247079917bee5",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-  },
-  {
-    user_id: "67526d0789bd27450be85c4e",
-    avatar:
-      "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-  },
-];
 const props = defineProps({
   courseInfo: {
     type: Object,
@@ -177,6 +94,7 @@ const students = ref([]);
 let reserveUserArr = ref([]);
 
 const db = uniCloud.database();
+const studioInfo = ref(uni.getStorageSync("studioInfo") || {});
 const userInfo = uni.getStorageSync("userInfo");
 // 导入云对象
 const schedule = uniCloud.importObject("schedule");
@@ -199,6 +117,36 @@ const storedUserInfo = ref(uni.getStorageSync("userInfo"));
 const isAdmin = computed(() =>
   storedUserInfo.value?.role === "superAdmin" ? true : false
 );
+
+// 提取课程开始时间
+const getStartTime = () => {
+  const timeRange = "03:30-05:00"; //props.courseInfo.time; // 15:30-17:00
+  const startTime = timeRange.split("-")[0]; // 获取 15:30
+  const [hour, minute] = startTime.split(":").map(Number);
+  const courseDate = new Date(props.clickDate);
+  courseDate.setHours(hour, minute, 0); // 设置具体时间
+  return courseDate;
+};
+
+// 计算课程是否已取消
+const isCancelled = computed(() => {
+  const courseStartTime = getStartTime().getTime();
+  const currentTime = Date.now();
+
+  // 提前小时数，默认为1小时
+  const cancelDeadlineHours = studioInfo.value.cancelDeadlineHours
+    ? Number(studioInfo.value.cancelDeadlineHours)
+    : 1;
+
+  const minParticipants = Number(studioInfo.value.minParticipants) || 5;
+  const reservedCount = props.courseInfo?.reservedUsers?.length || 0;
+
+  // 截止时间计算
+  const cancelDeadlineTime =
+    courseStartTime - cancelDeadlineHours * 60 * 60 * 1000;
+
+  return currentTime >= cancelDeadlineTime && reservedCount < minParticipants;
+});
 
 // 删除前确认
 function deleteCourse() {
@@ -258,22 +206,6 @@ async function deleteData() {
       .catch((err) => {
         console.log("err", err);
       });
-
-    // schedule
-    //   .removeCourse({
-    //     docId: props.courseId,
-    //     userId: userInfo.userId,
-    //   })
-    //   .then((res) => {
-    //     if (res.code === 200) {
-    //       console.log("课程删除成功", res.message);
-    //     } else {
-    //       console.error("删除失败", res.message);
-    //     }
-    //   })
-    //   .catch((err) => {
-    //     console.error("调用失败", err);
-    //   });
   } else {
     uni.showToast({
       title: "无权限删除",
@@ -306,6 +238,10 @@ const goDetail = () => {
   margin-top: 40rpx;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 
+  .cancel-gray {
+    filter: grayscale(100%);
+    pointer-events: none;
+  }
   .course-background {
     width: 100%;
     height: 100%;
@@ -412,6 +348,39 @@ const goDetail = () => {
       transform: translateY(-50%);
       z-index: 2; /* 确保按钮在蒙版上方 */
     }
+    .cancelled-badge {
+      position: absolute;
+      right: 30rpx;
+      top: 50%;
+      transform: translateY(-50%);
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+      color: #fff;
+      padding: 12rpx 30rpx;
+      border-radius: 50rpx;
+      font-size: 28rpx;
+      font-weight: bold;
+      box-shadow: 0 8rpx 16rpx rgba(255, 75, 43, 0.5);
+      text-align: center;
+      z-index: 10;
+    }
+
+    /* 动画效果 */
+    // .animate-badge {
+    //   animation: pulse 1.5s infinite;
+    // }
+
+    // /* 动画定义 */
+    // @keyframes pulse {
+    //   0% {
+    //     transform: translateY(-50%) scale(1);
+    //   }
+    //   50% {
+    //     transform: translateY(-50%) scale(1.1);
+    //   }
+    //   100% {
+    //     transform: translateY(-50%) scale(1);
+    //   }
+    // }
 
     /* 管理员操作按钮样式 */
     .more {
