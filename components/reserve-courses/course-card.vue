@@ -120,7 +120,7 @@ const isAdmin = computed(() =>
 
 // 提取课程开始时间
 const getStartTime = () => {
-  const timeRange = "03:30-05:00"; //props.courseInfo.time; // 15:30-17:00
+  const timeRange = props.courseInfo.time; // 15:30-17:00
   const startTime = timeRange.split("-")[0]; // 获取 15:30
   const [hour, minute] = startTime.split(":").map(Number);
   const courseDate = new Date(props.clickDate);
