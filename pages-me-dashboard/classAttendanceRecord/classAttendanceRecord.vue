@@ -64,7 +64,8 @@
 <script lang="ts" setup>
 import { ref, onMounted } from "vue";
 // Import echarts
-const echarts = require("../../uni_modules/lime-echart/static/echarts.min");
+import lEchart from "../uni_modules/lime-echart/components/l-echart/l-echart.vue";
+const echarts = require("../uni_modules/lime-echart/static/echarts.min");
 
 interface Statistics {
   totalCourses: number;
@@ -121,6 +122,7 @@ const fetchStatistics = async () => {
 
     if (res.result.code === 0) {
       statistics.value = res.result.data;
+      //console.log("charts-----", res.result.data);
       renderCharts();
     }
   } catch (error) {
@@ -136,6 +138,7 @@ const pieChartRef = ref(null);
 const renderCharts = async () => {
   // Line Chart
   setTimeout(async () => {
+    // console.log("charts111-----", echarts, lineChartRef.value);
     if (!lineChartRef.value) return;
 
     const dailyCourses = statistics.value.dailyCourses;
@@ -197,6 +200,7 @@ const renderCharts = async () => {
         },
       ],
     };
+    // console.log("echarts", echarts);
     const lineChart = await lineChartRef.value.init(echarts);
     lineChart.setOption(lineChartOption);
   }, 300);
