@@ -78,7 +78,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from "vue";
+import { ref, computed, reactive, watchEffect } from "vue";
 import reserveUserList from "./reserve-user-list.vue";
 import reserveButton from "./card-reserve-button.vue";
 
@@ -134,9 +134,10 @@ const isCancelled = computed(() => {
   const currentTime = Date.now();
 
   // 提前小时数，默认为1小时
-  const cancelDeadlineHours = studioInfo.value.cancelDeadlineHours
-    ? Number(studioInfo.value.cancelDeadlineHours)
-    : 1;
+  const cancelDeadlineHours = 10;
+  // studioInfo.value.cancelDeadlineHours
+  //   ? Number(studioInfo.value.cancelDeadlineHours)
+  //   : 1;
 
   const minParticipants = Number(studioInfo.value.minParticipants) || 5;
   const reservedCount = props.courseInfo?.reservedUsers?.length || 0;
@@ -225,6 +226,39 @@ const goDetail = () => {
     url: `/pages-reserve/reserveDetail/reserveDetail?courseData=${queryString}`,
   });
 };
+watchEffect(async () => {
+  console.log("isCancelled", isCancelled.value);
+  if (isCancelled.value) {
+    try {
+      const userCollection = db.collection("users");
+
+      // 查询 openid
+      const res = await userCollection
+        .doc(userInfo.userId)
+        .field("openid")
+        .get();
+
+      if (res.result.data && res.result.data.length > 0) {
+        const openid = res.result.data[0].openid;
+
+        // 调用云对象发送订阅消息
+        const cancelCourseMsg = uniCloud.importObject("cancelCourseMsg");
+
+        const sendRes = await cancelCourseMsg.sendSubscribeMessage({
+          openid: openid,
+          courseName: props.courseInfo.courseType,
+          courseTime: props.courseInfo.time,
+        });
+
+        console.log("订阅消息发送成功:", sendRes);
+      } else {
+        console.warn("未找到用户 openid，无法发送订阅消息");
+      }
+    } catch (err) {
+      console.error("获取用户 openid 失败", err);
+    }
+  }
+});
 </script>
 
 <style scoped lang="scss">

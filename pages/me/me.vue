@@ -43,7 +43,7 @@
       </view>
     </view>
     <!-- v-if="userInfo.role && userInfo.role == 'superAdmin'" -->
-    <view class="card">
+    <view class="card" v-if="userInfo.role && userInfo.role == 'superAdmin'">
       <view
         v-for="(item, index) in adminItems"
         :key="index"
@@ -379,7 +379,6 @@ const onNameChange = async (e) => {
 };
 
 onMounted(async () => {
-  console.log("onMouoad2222");
   const storedUserInfo = uni.getStorageSync("userInfo");
   // 回显用户电话 头像 昵称
   console.log("storedUserInfo", storedUserInfo);

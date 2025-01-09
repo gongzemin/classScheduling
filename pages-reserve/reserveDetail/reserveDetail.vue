@@ -272,7 +272,7 @@ function getAvatar(item) {
   return item.avatar || "../../static/images/defAvatar.png";
 }
 
-const handleBook = async () => {
+const reserveCourse = async () => {
   // TODO 用户第一次登录的时候没有cardId
   const { result } = await db
     .collection("user-membership-card")
@@ -315,6 +315,52 @@ const handleBook = async () => {
     .catch((err) => {
       console.error("预约失败", err);
     });
+};
+
+const openSetting = () => {
+  uni.openSetting({
+    success(res) {
+      console.log("设置界面返回：", res);
+      if (res.subscriptionsSetting) {
+        console.log("订阅消息授权状态：", res.subscriptionsSetting);
+      }
+    },
+    fail(err) {
+      console.error("打开设置失败：", err);
+    },
+  });
+};
+
+const handleBook = () => {
+  let id = "6VJls8Lis07mY5TgB0fHzzklTQiSmc6uTIUY3AA5Emg";
+  uni.requestSubscribeMessage({
+    tmplIds: [id],
+    success(res) {
+      if (res[id] !== "accept") {
+        // 用户未授权或选择拒绝，引导前往设置页面
+        uni.showModal({
+          title: "订阅失败",
+          content: "您已设置不再询问，请前往设置开启订阅提醒。",
+          confirmText: "去设置",
+          success(modalRes) {
+            if (modalRes.confirm) {
+              openSetting();
+            } else {
+              uni.showToast({
+                title: "您可能错过重要通知",
+                icon: "none",
+              });
+            }
+          },
+        });
+      } else {
+        uni.showToast({
+          title: "订阅成功",
+          icon: "success",
+        });
+      }
+    },
+  });
 };
 
 const handleCancel = async () => {
