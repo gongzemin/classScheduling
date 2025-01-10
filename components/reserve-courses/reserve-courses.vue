@@ -179,16 +179,7 @@ const updateDayCourses = async (dayOfWeek, forceUpdate = false) => {
     }
   }
 
-  console.log("Updated day courses:", dayCourses.value);
-  // dayCourses.value.forEach((item) => {
-  //   item.isReserved =
-  //     item.reservedUsers &&
-  //     item.reservedUsers.some(
-  //       (user) => user.user_id === storedUserInfo.value.userId
-  //     );
-  // });
-
-  console.log("Updated day courses:", dayCourses.value);
+  // console.log("Updated day courses:", dayCourses.value);
 };
 
 // 页面跳转：前往新增课程页面
