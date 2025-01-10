@@ -1,27 +1,35 @@
+#### 1.0.6 2025/1/10
+
+- **新增功能**：
+  - 新增会员列表页，并支持按手机号、会员卡类型、截止日期范围进行查询。
+  - 支持动态配置开课前多少小时和人数不够时自动取消课程，相关数据从数据库中动态获取。
+- **性能优化**：
+  - 将 ECharts 图表依赖包移至分包，提高页面加载性能。
+
 #### 上课记录返回的数据形式
 
 {
-	"code": 0,
-	"data": {
-		"totalCourses": 15,
-		"trainingDays": 8,
-		"dailyCourses": [{
-				"date": "2024-06-01",
-				"count": 3
-			},
-			{
-				"date": "2024-06-02",
-				"count": 1
-			}
-		],
-		"courseDistribution": [{
-				"name": "瑜伽-初级",
-				"value": 5
-			},
-			{
-				"name": "舞蹈-中级",
-				"value": 3
-			}
-		]
-	}
+"code": 0,
+"data": {
+"totalCourses": 15,
+"trainingDays": 8,
+"dailyCourses": [{
+"date": "2024-06-01",
+"count": 3
+},
+{
+"date": "2024-06-02",
+"count": 1
+}
+],
+"courseDistribution": [{
+"name": "瑜伽-初级",
+"value": 5
+},
+{
+"name": "舞蹈-中级",
+"value": 3
+}
+]
+}
 }

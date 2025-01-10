@@ -251,8 +251,8 @@ const adminItems = ref([
     size: 20,
   },
   {
-    label: "学员管理",
-    path: "/pages-courses/courseList/courseList",
+    label: "会员管理",
+    path: "/pages-users/userList/userList",
     icon: "staff",
     size: 28,
   },

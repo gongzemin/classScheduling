@@ -6,7 +6,6 @@
         <input
           v-model="filters.mobile"
           placeholder="输入手机号"
-          clearable
           type="number" />
       </view>
       <view class="row">
@@ -14,17 +13,13 @@
           mode="date"
           :value="filters.startDate"
           @change="onDateChange('startDate', $event)">
-          <view class="picker">
-            起始日期: {{ filters.startDate || "选择日期" }}
-          </view>
+          <view class="picker">截止日期的起始日期 {{ filters.startDate }}</view>
         </picker>
         <picker
           mode="date"
           :value="filters.endDate"
           @change="onDateChange('endDate', $event)">
-          <view class="picker">
-            结束日期: {{ filters.endDate || "选择日期" }}
-          </view>
+          <view class="picker">截止日期的结束日期 {{ filters.endDate }}</view>
         </picker>
       </view>
       <view class="row">
@@ -235,7 +230,7 @@ function changePage(page) {
 // 处理日期选择
 function onDateChange(key, event) {
   filters.value[key] = event.detail.value;
-  onSearch();
+  // onSearch();
 }
 
 // 处理会员卡类型选择
@@ -245,6 +240,22 @@ function onCardTypeChange(event) {
 }
 
 const onSearch = () => {
+  // 校验起始日期和结束日期
+  if (filters.value.startDate && !filters.value.endDate) {
+    uni.showToast({
+      title: "请选择结束日期",
+      icon: "none",
+    });
+    return;
+  }
+
+  if (!filters.value.startDate && filters.value.endDate) {
+    uni.showToast({
+      title: "请选择起始日期",
+      icon: "none",
+    });
+    return;
+  }
   currentPage.value = 1;
   fetchUsers();
 };
