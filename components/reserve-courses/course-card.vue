@@ -219,6 +219,7 @@ const goDetail = () => {
   const courseObj = {
     ...props.courseInfo,
     isoDate: formattedDate,
+    isCancelled: isCancelled.value,
   };
   const queryString = encodeURIComponent(JSON.stringify(courseObj));
   uni.navigateTo({

@@ -67,12 +67,17 @@
       </view>
     </view>
 
+    <!-- 已取消 badge -->
+    <view v-if="isCancelled" class="cancelled-badge animate-badge">
+      课程已取消
+    </view>
+
     <!-- 预约按钮 -->
     <reserve-button
       class="reserve"
       :courseInfo="courseInfo"
       @book="bookCourse"
-      v-if="Object.keys(courseInfo).length" />
+      v-if="Object.keys(courseInfo).length && !isCancelled" />
   </view>
 </template>
 
@@ -91,6 +96,7 @@ const storedUserInfo = ref(uni.getStorageSync("userInfo"));
 
 const bookedCount = ref(12); // 已预约人数
 const maxCapacity = 20; // 最大人数
+const isCancelled = ref(false);
 
 const courseInfo = reactive({});
 const reserveUserArr = ref([]);
@@ -417,7 +423,8 @@ onLoad((options) => {
     courseObj.time = `${formatDateToYYYYMMDD(new Date(courseObj.isoDate))} ${
       courseObj.time
     }`;
-    console.log(courseObj, "courseObj");
+    // console.log("courseObj---", courseObj);
+    isCancelled.value = courseObj.isCancelled;
     // 现在可以访问 courseObj.id, courseObj.date, courseObj.time 等
     Object.assign(courseInfo, courseObj);
     uni.setNavigationBarTitle({
@@ -543,6 +550,32 @@ onLoad((options) => {
     // position: absolute;
     // bottom: 0;
     // width: 100vw;
+  }
+  .cancelled-badge {
+    display: inline-block;
+    padding: 26rpx 122rpx;
+    color: #fff;
+    background-color: #f56c6c; // 红色背景
+    border-radius: 20rpx; // 圆角
+    font-size: 28rpx; // 字体大小
+    font-weight: bold;
+    text-align: center;
+    // box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2); // 阴影效果
+  }
+
+  .animate-badge {
+    animation: fadeIn 0.8s ease-in-out; // 淡入动画
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 }
 </style>
