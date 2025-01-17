@@ -560,6 +560,7 @@ onLoad((options) => {
     font-size: 28rpx; // 字体大小
     font-weight: bold;
     text-align: center;
+    width: 95vw;
     // box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2); // 阴影效果
   }
 

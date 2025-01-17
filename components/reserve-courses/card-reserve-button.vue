@@ -101,7 +101,7 @@ const bookCourse = async () => {
 .reserve-btn {
   font-size: 16px;
   text-align: center;
-  border-radius: 5px;
+  border-radius: 20px;
   border: none;
 }
 .reserve-btn.active {
