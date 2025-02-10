@@ -6,6 +6,10 @@
 - **性能优化**：
   - 将 ECharts 图表依赖包移至分包，提高页面加载性能。
 
+在线体验，扫码体验小程序完整功能。
+
+![IMG_3158.JPG](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/6039916400e547cfbb983eaa9bf95f4c~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAgZ29uZ3plbWlu:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiMzkzMTUwOTMxMTY4MTE5MiJ9&rk3s=e9ecf3d6&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1739265842&x-orig-sign=HXyxzyUhZyKrGIE2PswoQ8uocQk%3D)
+
 ### 一个基于 uni-app 开发的微信小程序，集学员端和管理端于一体，提供便捷的课程预约管理功能，适用于健身房、舞蹈室、教育培训等场景。
 
 ### 🎓 学员端功能
