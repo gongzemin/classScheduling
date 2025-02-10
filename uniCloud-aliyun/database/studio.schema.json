@@ -1,0 +1,163 @@
+{
+  "bsonType": "object",
+  "required": [],
+  "permission": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": false
+  },
+  "properties": {
+    "_id": {
+      "description": "ID，系统自动生成"
+    },
+    "name": {
+      "bsonType": "string",
+      "title": "名称",
+      "description": "用户名，不允许重复",
+      "trim": "both"
+    },
+    "slogan": {
+      "bsonType": "string",
+      "title": "口号",
+      "description": "口号",
+      "trim": "both"
+    },
+    "description": {
+      "bsonType": "string",
+      "title": "简介",
+      "description": "descrption",
+      "trim": "both"
+    },
+    "phone": {
+      "bsonType": "string",
+      "title": "电话",
+      "description": "电话",
+      "trim": "both"
+    },
+    "email": {
+      "bsonType": "string",
+      "title": "邮件地址",
+      "description": "邮件地址",
+      "trim": "both"
+    },
+    "wechatId": {
+      "bsonType": "string",
+      "title": "微信ID",
+      "description": "微信ID",
+      "trim": "both"
+    },
+    "address": {
+      "bsonType": "string",
+      "title": "舞室地址",
+      "description": "舞室地址",
+      "trim": "both"
+    },
+    "minParticipants": {
+      "bsonType": "number",
+      "title": "最低开课人数",
+      "description": "课程开课所需的最低人数"
+    },
+    "cancelDeadlineHours": {
+      "bsonType": "number",
+      "title": "取消截止时间",
+      "description": "课程开始前多少小时不能取消"
+    },
+    "banner": {
+      "bsonType": "array",
+      "title": "舞室相册 前3张为首页banner",
+      "description": "存储多张图片的 URL",
+      "items": {
+        "bsonType": "object",
+        "description": "图片信息",
+        "properties": {
+          "cloudPath": {
+            "bsonType": "string",
+            "description": "云存储路径"
+          },
+          "extname": {
+            "bsonType": "string",
+            "description": "图片扩展名"
+          },
+          "fileID": {
+            "bsonType": "string",
+            "description": "图片文件 ID"
+          },
+          "fileType": {
+            "bsonType": "string",
+            "description": "文件类型"
+          },
+          "image": {
+            "bsonType": "object",
+            "description": "图片的代理信息",
+            "properties": {
+              "width": {
+                "bsonType": "int",
+                "description": "图片宽度"
+              },
+              "height": {
+                "bsonType": "int",
+                "description": "图片高度"
+              },
+              "location": {
+                "bsonType": "string",
+                "description": "图片的本地路径"
+              }
+            }
+          },
+          "name": {
+            "bsonType": "string",
+            "description": "图片名称"
+          },
+          "path": {
+            "bsonType": "string",
+            "description": "图片文件的路径"
+          },
+          "size": {
+            "bsonType": "int",
+            "description": "图片文件大小"
+          },
+          "status": {
+            "bsonType": "string",
+            "description": "上传状态"
+          },
+          "url": {
+            "bsonType": "string",
+            "description": "图片的 URL"
+          },
+          "uuid": {
+            "bsonType": "string",
+            "description": "图片的唯一标识符"
+          }
+        },
+        "maxItems": 14
+      }
+    },
+    "lngLat": {
+      "bsonType": "object",
+      "title": "经纬度",
+      "description": "存储经纬度信息",
+      "required": ["longitude", "latitude"],
+      "properties": {
+        "longitude": {
+          "bsonType": "number",
+          "description": "经度"
+        },
+        "latitude": {
+          "bsonType": "number",
+          "description": "纬度"
+        }
+      }
+    },
+    "modules": {
+      "bsonType": "array",
+      "title": "功能模块",
+      "description": "用户可选择的功能模块",
+      "items": {
+        "bsonType": "string",
+        "enum": ["舞室相册", "租教室", "演出合作", "优惠活动", "品牌介绍"],
+        "description": "模块名称"
+      }
+    }
+  }
+}

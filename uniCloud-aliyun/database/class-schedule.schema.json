@@ -1,0 +1,82 @@
+{
+  "bsonType": "object",
+  "required": [],
+  "permission": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "properties": {
+    "_id": { "description": "ID，系统自动生成" },
+    "day": {
+      "bsonType": "string",
+      "title": "周几",
+      "description": "周几",
+      "trim": "both"
+    },
+    "startTime": {
+      "bsonType": "timestamp",
+      "title": "课程开始时间",
+      "description": "课程开始时间",
+      "defaultValue": {
+        "$env": "now"
+      }
+    },
+    "endTime": {
+      "bsonType": "timestamp",
+      "title": "课程结束时间",
+      "description": "课程结束时间",
+      "defaultValue": {
+        "$env": "now"
+      }
+    },
+    "addTeacherType": {
+      "bsonType": "string",
+      "title": "新增教师方式",
+      "description": "新增教师方式 existing  new",
+      "defaultValue": "existing",
+      "enum": [
+        { "text": "选择已有的老师", "value": "existing" },
+        { "text": "新增上课老师", "value": "new" }
+      ]
+    },
+    "courseType": {
+      "bsonType": "string",
+      "title": "课程种类",
+      "description": "课程种类"
+    },
+    "courseLevel": {
+      "bsonType": "string",
+      "title": "课程难度",
+      "description": "课程难度"
+    },
+    "courseTeacherName": {
+      "bsonType": "string",
+      "title": "课程老师名称",
+      "description": "课程老师名称"
+    },
+    "courseTeacherPic": {
+      "bsonType": "string",
+      "title": "课程老师照片",
+      "description": "课程老师照片"
+    },
+    "capacity": {
+      "bsonType": "number",
+      "description": "可容纳人数",
+      "minimum": 1
+    },
+    "create_date": {
+      "bsonType": "timestamp",
+      "defaultValue": {
+        "$env": "now"
+      }
+    },
+    "update_date": {
+      "bsonType": "timestamp",
+      "defaultValue": {
+        "$env": "now"
+      }
+    }
+  }
+}

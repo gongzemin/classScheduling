@@ -1,0 +1,7 @@
+{
+  "name": "getMonthlyStatistics",
+  "dependencies": {},
+  "extensions": {
+    "uni-cloud-jql": {}
+  }
+}

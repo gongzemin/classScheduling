@@ -1,0 +1,9 @@
+{
+  "name": "cancelCourseMessage",
+  "dependencies": {
+    "axios": "^1.7.9"
+  },
+  "extensions": {
+    "uni-cloud-jql": {}
+  }
+}

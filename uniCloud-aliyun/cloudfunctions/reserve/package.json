@@ -1,0 +1,7 @@
+{
+  "name": "reserve",
+  "dependencies": {},
+  "extensions": {
+    "uni-cloud-jql": {}
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "bsonType": "object",
+  "required": [],
+  "permission": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "properties": {
+    "_id": {
+      "description": "ID，系统自动生成"
+    },
+    "user_id": {
+      "bsonType": "string",
+      "description": "预约上课用户ID，参考`users` 表",
+      "foreignKey": "users._id"
+    },
+    "status": {
+      "bsonType": "int",
+      "title": "用户状态",
+      "description": "用户状态：0 未激活, 1 正常, 2 已过期",
+      "enum": [
+        { "text": "未激活", "value": 0 },
+        { "text": "正常", "value": 1 },
+        { "text": "已过期", "value": 2 }
+      ],
+      "defaultValue": 0
+    },
+    "cardType": {
+      "bsonType": "string",
+      "title": "会员卡类型",
+      "description": "会员卡类型，可选值为 'timeCard'（时间卡）或 'sessionCard'（次卡）",
+      "enum": [
+        { "text": "时间卡", "value": "timeCard" },
+        { "text": "次卡", "value": "sessionCard" }
+      ],
+      "defaultValue": { "text": "时间卡", "value": "timeCard" }
+    },
+    "expirationDate": {
+      "bsonType": "date",
+      "title": "会员卡过期日期",
+      "description": "会员卡有效的截止日期"
+    },
+    "startDate": {
+      "bsonType": "date",
+      "title": "会员卡开始日期",
+      "description": "会员卡生效的起始日期"
+    },
+    "validityPeriod": {
+      "bsonType": "string",
+      "title": "会员卡有效期",
+      "description": "会员卡有效期",
+      "enum": [
+        "7天",
+        "1个月",
+        "2个月",
+        "3个月",
+        "4个月",
+        "5个月",
+        "6个月",
+        "7个月",
+        "8个月",
+        "9个月",
+        "10个月",
+        "11个月",
+        "1年",
+        "永久有效"
+      ]
+    },
+    "totalSessions": {
+      "bsonType": "int",
+      "title": "总次数（适用于次卡）",
+      "minimum": 0,
+      "default": 0
+    },
+    "remainingSessions": {
+      "bsonType": "int",
+      "title": "会员卡剩余次数字",
+      "description": "会员卡的剩余可用次数（适用于次卡）",
+      "minimum": 0,
+      "default": 0
+    },
+    "historyCards": {
+      "bsonType": "array",
+      "title": "历史会员卡",
+      "description": "用户之前使用过的会员卡记录",
+      "items": {
+        "bsonType": "object",
+        "properties": {
+          "cardType": {
+            "bsonType": "string",
+            "title": "历史会员卡类型",
+            "enum": ["timeCard", "sessionCard"]
+          },
+          "startDate": {
+            "bsonType": "date",
+            "title": "历史卡开始日期"
+          },
+          "expirationDate": {
+            "bsonType": "date",
+            "title": "历史卡过期日期"
+          },
+          "totalSessions": {
+            "bsonType": "int",
+            "title": "总次数（适用于次卡）",
+            "default": 0
+          },
+          "remainingSessions": {
+            "bsonType": "int",
+            "title": "剩余次数（适用于次卡）",
+            "default": 0
+          }
+        }
+      }
+    }
+  }
+}

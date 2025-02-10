@@ -1,0 +1,44 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+  "bsonType": "object",
+  "required": [],
+  "permission": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "properties": {
+    "_id": {
+      "description": "ID，系统自动生成"
+    },
+    "user_id": {
+      "bsonType": "string",
+      "description": "预约上课用户ID，参考`users` 表",
+      "foreignKey": "users._id"
+    },
+    "class_id": {
+      "bsonType": "string",
+      "description": "课程ID",
+      "foreignKey": "class-schedule._id"
+    },
+    "reserve_class_date": {
+      "bsonType": "date",
+      "title": "预约的课程上课日期"
+    },
+    "reserve_time": {
+      "bsonType": "timestamp",
+      "title": "预约时间",
+      "description": "预约时间",
+      "defaultValue": {
+        "$env": "now"
+      }
+    },
+    "canceled": {
+      "bsonType": "boolean",
+      "title": "是否取消预约",
+      "description": "指示此预约是否已取消",
+      "defaultValue": false
+    }
+  }
+}

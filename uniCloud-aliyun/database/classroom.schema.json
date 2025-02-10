@@ -1,0 +1,67 @@
+{
+  "bsonType": "object",
+  "required": ["name", "area", "capacity", "style"],
+  "permission": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": false
+  },
+  "properties": {
+    "_id": {
+      "bsonType": "objectId",
+      "description": "ID，系统自动生成"
+    },
+    "name": {
+      "bsonType": "string",
+      "description": "教室名称"
+    },
+    "style": {
+      "bsonType": "string",
+      "description": "装修风格",
+      "enum": [
+        "现代简约",
+        "复古风",
+        "工业风",
+        "日式风",
+        "中式风",
+        "混搭风",
+        "其他"
+      ],
+      "title": "装修风格",
+      "default": "现代简约"
+    },
+    "area": {
+      "bsonType": "number",
+      "description": "面积，单位为平方米",
+      "minimum": 1
+    },
+    "album": {
+      "bsonType": "array",
+      "title": "教室相册",
+      "description": "存储教室图片的 URL",
+      "items": {
+        "bsonType": "string",
+        "description": "图片 URL"
+      },
+      "maxItems": 20
+    },
+    "lighting": {
+      "bsonType": "string",
+      "description": "灯光类型，例如暖光、冷光、可调节灯光"
+    },
+    "capacity": {
+      "bsonType": "number",
+      "description": "可容纳人数",
+      "minimum": 1
+    },
+    "createdAt": {
+      "bsonType": "date",
+      "description": "创建时间，系统自动生成"
+    },
+    "updatedAt": {
+      "bsonType": "date",
+      "description": "更新时间，系统自动更新"
+    }
+  }
+}
