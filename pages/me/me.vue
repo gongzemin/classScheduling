@@ -69,56 +69,7 @@ const collection = db.collection("users");
 
 // 登录状态
 const isLoggedIn = ref(false);
-const userInfo = reactive({
-  // mobile: "15270228821",
-  // avatar: "/static/images/defaultAvatar.jpeg", // 默认头像
-  // userId: "67526d0789bd27450be85c4e",
-  // nickname: "未登录",
-  // role: "Admin",
-  // expirationDate: "2025-02-11T18:00:30Z",
-  // cardType: "timeCard",
-});
-
-// uni.setStorageSync("userInfo", {
-//   mobile: "15270228821",
-//   avatar: "/static/images/defaultAvatar.jpeg", // 默认头像
-//   userId: "675abd1bce5ec9aad5641046",
-//   nickname: "未登录",
-//   role: "Admin",
-//   expirationDate: "2025-02-11T18:00:30Z",
-//   cardType: "timeCard",
-// });
-
-// uni.setStorageSync("userInfo", {
-//   mobile: "15270223103",
-//   userId: "6763d1654b9247079917bee5",
-//   cardType: "sessionCard",
-//   nickname: "录",
-//   role: "Admin",
-//   expirationDate: "2025-02-11T18:00:30Z",
-// });
-
-// db.collection("users")
-//   .add({
-//     gender: 0,
-//     cardType: "sessionCard",
-//     mobile: "15270223103",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/7J0bHgHKxZLQd6e32c82d19bbf5917bb784504b8b994.jpg",
-//   })
-//   .then((res) => {
-//     console.log("hha");
-//   });
-
-// uni.setStorageSync("userInfo", {
-//   mobile: "15112653200",
-//   avatar: "/static/images/defaultAvatar.jpeg", // 默认头像
-//   userId: "67526d0789bd27450be85c4e",
-//   nickname: "未登录",
-//   role: "superAdmin",
-//   expirationDate: "2025-02-11T18:00:30Z",
-//   cardType: "timeCard",
-// });
+const userInfo = reactive({});
 
 let isUserLoaded = false; // 标志是否已加载用户信息
 // 获取用户电话获取用户id
