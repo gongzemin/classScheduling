@@ -40,9 +40,7 @@ interface Day {
 }
 
 // 定义滚动事件的处理函数类型
-const onScroll = (event: Event): void => {
-  console.log("Scrolling...", event);
-};
+const onScroll = (event: Event): void => {};
 /**
  * 获取从周一开始的一周日期的辅助函数
  * @param {Date} startDate - 一周的起始日期（通常是某个周一）
@@ -124,10 +122,8 @@ const getWeekday = (date: Date): string => {
  * @param {Date} date - 被点击的日期
  */
 const handleDayClick = (date: Date) => {
-  console.log("date-00000000---", date, date instanceof Date);
   const weekday = getWeekday(date); // 获取点击的日期对应的周几
   selectedDay.value = date; // 更新选中的日期
-  console.log("weekday", weekday);
   // uni.$emit("dayClick", date.toLocaleDateString());
   emits("dayClick", { weekday, date }); // 仅传递周几作为事件参数
 };

@@ -39,7 +39,6 @@ const getStudioInfo = () => {
     .then((res) => {
       loading.value = false;
       if (res.result.errCode === 0) {
-        console.log("res", res.result.data);
         Object.assign(studioInfo, res.result.data);
         // 使用异步的 uni.setStorage
         uni.setStorage({
