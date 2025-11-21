@@ -3,7 +3,7 @@
     <!-- 背景展示老师图片 -->
     <view
       class="course-background"
-      :class="isCancelled ? 'cancel-gray' : ''"
+      :class="isCourseCancelled ? 'cancel-gray' : ''"
       :style="{ backgroundImage: `url(${courseInfo.courseTeacherPic})` }">
       <!-- 透明蒙版 -->
       <view class="overlay"></view>
@@ -32,37 +32,28 @@
         <view class="teacher-name mt-40">
           <view>{{ courseInfo.courseTeacherName }}</view>
         </view>
+
+        <!-- 预约统计 - 区分正式预约和候补 -->
         <view class="reserve-static">
-          已预约 {{ courseInfo?.reservedUsers?.length || 0 }}/{{
-            courseInfo?.capacity || 20
-          }}
+          已预约 {{ confirmedCount }}/{{ courseInfo?.capacity || 20 }}
+          <text v-if="waitlistCount > 0" class="waitlist-text">
+            (候补{{ waitlistCount }}人)
+          </text>
         </view>
 
-        <!-- 学生头像列表   {{ courseInfo.reservedUsers }}TODO 后面可以不用写 courseInfo.reservedUsers &&  -->
-        <view class="pt-20 flex" v-if="courseInfo.reservedUsers?.length">
-          <reserve-user-list
-            :reservedUsers="courseInfo.reservedUsers.slice(0, 9)" />
-          <view v-if="courseInfo.reservedUsers.length > 9" class="text-gray">
-            ...
-          </view>
+        <!-- 学生头像列表 - 只显示确认预约的用户   -->
+        <view class="pt-20 flex" v-if="confirmedRecords?.length">
+          <reserve-user-list :reservedUsers="confirmedRecords.slice(0, 9)" />
+          <view v-if="confirmedRecords.length > 9" class="text-gray">...</view>
         </view>
-      </view>
-
-      <!-- 已取消 badge -->
-      <view v-if="isCancelled" class="cancelled-badge animate-badge">
-        已取消
-      </view>
-
-      <view v-if="courseInfo.isReserved && !isCancelled" class="reserve-btn">
-        已预约
       </view>
 
       <!-- 预约按钮 - 如果课程已取消，不显示预约按钮 -->
       <reserve-button
-        v-else-if="!isCancelled"
-        :time="courseInfo.time"
         :clickDate="clickDate"
-        :classId="courseInfo._id"
+        :courseInfo="courseInfo"
+        :confirmedCount="confirmedCount"
+        :isCourseCancelled="isCourseCancelled"
         class="reserve-btn" />
 
       <!-- 管理员操作按钮 -->
@@ -78,7 +69,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, watchEffect } from "vue";
+import { ref, computed } from "vue";
 import reserveUserList from "./reserve-user-list.vue";
 import reserveButton from "./card-reserve-button.vue";
 
@@ -90,33 +81,47 @@ const props = defineProps({
   clickDate: Date, // 点击的日期对象
 });
 
-const students = ref([]);
-let reserveUserArr = ref([]);
-
 const db = uniCloud.database();
 const studioInfo = ref(uni.getStorageSync("studioInfo") || {});
-const userInfo = uni.getStorageSync("userInfo");
-// 导入云对象
-const schedule = uniCloud.importObject("schedule");
 const emit = defineEmits(["refreshList"]);
-const bookInfo = reactive({
-  count: 0,
-  capacity: 45,
+
+// 计算确认预约的用户
+const confirmedRecords = computed(() => {
+  // console.log(
+  //   "xxx--confirmedRecords",
+  //   props.courseInfo,
+  //   props.courseInfo.reserveRecords
+  // );
+  return (
+    props.courseInfo.reserveRecords?.filter(
+      (record) => record.status === "confirmed"
+    ) || []
+  );
 });
+
+// 计算候补用户
+const waitlistRecords = computed(() => {
+  return (
+    props.courseInfo.reserveRecords?.filter(
+      (record) => record.status === "waitlist"
+    ) || []
+  );
+});
+
+// 确认预约人数
+const confirmedCount = computed(() => confirmedRecords.value.length);
+
+// 候补人数
+const waitlistCount = computed(() => waitlistRecords.value.length);
+
+// 难度星级
 const starCount = computed(() => {
-  if (props.courseInfo.courseLevel === "入门") {
-    return 1;
-  } else if (props.courseInfo.courseLevel === "基础") {
-    return 2;
-  } else if (props.courseInfo.courseLevel === "进阶") {
-    return 3;
-  }
+  const levelMap = { 入门: 1, 基础: 2, 进阶: 3 };
+  return levelMap[props.courseInfo.courseLevel] || 1;
 });
 
 const storedUserInfo = ref(uni.getStorageSync("userInfo"));
-const isAdmin = computed(() =>
-  storedUserInfo.value?.role === "superAdmin" ? true : false
-);
+const isAdmin = computed(() => storedUserInfo.value?.role === "superAdmin");
 
 // 提取课程开始时间
 const getStartTime = () => {
@@ -129,23 +134,26 @@ const getStartTime = () => {
 };
 
 // 计算课程是否已取消
-const isCancelled = computed(() => {
+const isCourseCancelled = computed(() => {
   const courseStartTime = getStartTime().getTime();
   const currentTime = Date.now();
 
-  // 提前小时数，默认为1小时
+  // 提前小时数，默认为开课前1小时
   const cancelDeadlineHours = studioInfo.value.cancelDeadlineHours
     ? Number(studioInfo.value.cancelDeadlineHours)
     : 1;
 
   const minParticipants = Number(studioInfo.value.minParticipants) || 5;
-  const reservedCount = props.courseInfo?.reservedUsers?.length || 0;
 
   // 截止时间计算
   const cancelDeadlineTime =
     courseStartTime - cancelDeadlineHours * 60 * 60 * 1000;
 
-  return currentTime >= cancelDeadlineTime && reservedCount < minParticipants;
+  return (
+    // 就是说cancelDeadlineTime是开课前的1小时或其他时间
+    // currentTime >= cancelDeadlineTime 就是现在的时间大于可以取消上课的时间
+    currentTime >= cancelDeadlineTime && confirmedCount.value < minParticipants
+  );
 });
 
 // 删除前确认
@@ -159,7 +167,6 @@ function deleteCourse() {
         deleteData();
       } else {
         // 用户点击取消，不做任何操作
-        console.log("用户取消删除");
       }
     },
   });
@@ -180,10 +187,9 @@ const showMore = () => {
       } else if (res.tapIndex === 1) {
         deleteCourse();
       }
-      console.log("选中了第" + (res.tapIndex + 1) + "个按钮");
     },
     fail: function (res) {
-      console.log(res.errMsg);
+      // console.log(res.errMsg);
     },
   });
 };
@@ -203,9 +209,7 @@ async function deleteData() {
         });
         emit("refreshList");
       })
-      .catch((err) => {
-        console.log("err", err);
-      });
+      .catch((err) => {});
   } else {
     uni.showToast({
       title: "无权限删除",
@@ -214,12 +218,11 @@ async function deleteData() {
   }
 }
 const goDetail = () => {
-  console.log("card");
   const formattedDate = props.clickDate.toISOString(); // 转换为 ISO 格式
   const courseObj = {
     ...props.courseInfo,
     isoDate: formattedDate,
-    isCancelled: isCancelled.value,
+    isCourseCancelled: isCourseCancelled.value,
   };
   const queryString = encodeURIComponent(JSON.stringify(courseObj));
   uni.navigateTo({
@@ -238,7 +241,6 @@ function getClassStartTime(timestamp) {
   // 格式化日期
   const formattedDate = localDate.toISOString().slice(0, 16).replace("T", " ");
   return formattedDate;
-  console.log(formattedDate); // 输出: 2025-01-09 18:50
 }
 </script>
 

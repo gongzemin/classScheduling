@@ -87,19 +87,7 @@ const sortedTimes = () => {
   // });
 };
 
-// const test = async () => {
-// 	const existingReservation = await db
-// 	    .collection("user-reserve")
-// 	    .where({
-// 	      user_id: userId,
-// 	      class_id: queryClassId,
-// 	    })
-// 	    .get();
-// 		console.log('ssss', existingReservation)
-// }
-// console.log('xxx', test())
-
-const getReserveUser = (course, targetDate) => {
+const getReserveRecords = (course, targetDate) => {
   // 获取当天的起始时间
   const startOfDay = new Date(targetDate);
   startOfDay.setHours(0, 0, 0, 0); // 设置为当天 00:00:00.000
@@ -120,26 +108,23 @@ const getReserveUser = (course, targetDate) => {
     .getTemp();
   let userTemp = db.collection("users").field("_id, avatar").getTemp();
 
+  // 不能加 .limit(course.capacity) 因为还有候补的 不然导致用户预约了 不显示
   return db
     .collection(reserveTemp, userTemp)
     .orderBy("reserve_time desc")
-    .limit(course.capacity)
     .get();
 };
 
 // 数据更新：更新需要展示的课程
 const updateDayCourses = async (dayOfWeek, forceUpdate = false) => {
   const targetDay = dayOfWeek || getWeekdayInChinese(new Date().getDay());
-  console.log("Target day:", targetDay);
 
   // 如果没有课程数据或者需要强制刷新，则重新获取数据
   if (!courseList.value.length || forceUpdate) {
-    console.log("Fetching courses data...");
     await fetchCourses();
   }
 
   if (!courseList.value.length) {
-    console.warn("No course data available.");
     dayCourses.value = []; // 清空展示课程
     return;
   }
@@ -153,27 +138,31 @@ const updateDayCourses = async (dayOfWeek, forceUpdate = false) => {
   }));
   sortedTimes();
 
-  // 设置用户头像
   for (let course of dayCourses.value) {
-    const res = await getReserveUser(course, props.clickDate); // 获取预约用户信息
+    // 返回“预约记录 + 联查的用户信息”
+    const res = await getReserveRecords(course, props.clickDate); // 获取预约用户信息
     if (res.result.errCode === 0) {
-      // console.log(
-      //   "9999",
-      //   res.result.data,
-      //   props.clickDate,
-      //   typeof props.clickDate
-      // );
       if (res.result.data.length) {
-        let users = res.result.data
-          .map((item) => item.user_id.length && item.user_id)
-          .flat();
-        // console.log("999999991", users);
-        course.reservedUsers = users.map((item) => item.avatar);
-        course.isReserved = users
-          .map((item) => item._id)
-          .includes(storedUserInfo.value.userId);
+        const reserveRecords = res.result.data;
+        // 保存预约记录（包括用户信息等）
+        course.reserveRecords = reserveRecords;
+        // 因为是联合查询 所以这个user_id是一个数组
+        // 判断当前用户这节课是否已预约
+        course.isReserved = reserveRecords.some(
+          (item) =>
+            item.user_id?.[0]?._id === storedUserInfo.value.userId &&
+            item.status === "confirmed"
+        );
+        // 判断当前用户这节课是否已候补
+        course.isWaited = reserveRecords.some(
+          (item) =>
+            item.user_id?.[0]?._id === storedUserInfo.value.userId &&
+            item.status === "waitlist"
+        );
+        console.log("course---", course);
       } else {
         course.isReserved = false;
+        course.isWaited = false;
         course.reservedUsers = [];
       }
     }
@@ -189,12 +178,10 @@ const goNewCourse = () => {
 
 // 刷新课程列表
 const refresh = () => {
-  console.log("Refresh triggered for:", props.dayOfTheWeek);
   updateDayCourses(props.dayOfTheWeek, true); // 强制刷新课程数据
 };
 
 uni.$on("refreshList", () => {
-  console.log("这个uni.on起作用吗");
   updateDayCourses(props.dayOfTheWeek, true); // 强制刷新
 });
 

@@ -1,39 +1,31 @@
 <template>
-  <view>
-    <view v-if="buttonStatus === '已结束'" class="reserve-btn">
-      {{ buttonStatus }}
-    </view>
-    <!-- :disabled="buttonStatus !== '预约' && buttonStatus !== '进行中'" -->
-    <button
-      v-else
-      class="reserve-btn"
-      :class="{
-        active: buttonStatus === '预约',
-        ing: buttonStatus === '进行中',
-      }">
-      {{ buttonStatus }}
-    </button>
+  <view class="reserve-btn" :class="buttonClass">
+    {{ buttonText }}
   </view>
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { computed } from "vue";
 import { parseTimeToMinutes } from "../../common/util.js";
 
 const userInfo = uni.getStorageSync("userInfo");
 // Props 接收
 const props = defineProps({
-  time: {
-    type: String, // 格式为 HH:mm-HH:mm
-    required: true,
-    validator: (value) => /^(\d{2}:\d{2})-(\d{2}:\d{2})$/.test(value), // 校验格式
-  },
   clickDate: {
-    type: Date, // 按钮对应的日期
+    type: Date, // 按钮对应的约课上课日期
     required: true,
   },
-  classId: {
-    type: String, // 格式为 HH:mm-HH:mm
+  courseInfo: {
+    type: Object,
+    required: true,
+  },
+  confirmedCount: {
+    type: Number,
+    required: true,
+  },
+  isCourseCancelled: {
+    type: Boolean,
+    default: false,
   },
 });
 
@@ -51,72 +43,168 @@ const today12PM = computed(() => {
 });
 
 // 拆分开始时间和结束时间
-const [startTime, endTime] = props.time.split("-").map(parseTimeToMinutes);
+const [startTime, endTime] = props.courseInfo.time
+  .split("-")
+  .map(parseTimeToMinutes);
 
-// 获取按钮状态
-const buttonStatus = computed(() => {
-  const currentMinutes = now.value.getHours() * 60 + now.value.getMinutes(); // 当前时间分钟数
-  const diffDays = Math.floor(
-    (props.clickDate.getTime() - today.value.getTime()) / (1000 * 60 * 60 * 24)
-  ); // 按钮日期与今天的天数差
-
-  if (diffDays < 0) {
-    return "已结束"; // 今天之前的日期
-  }
-  if (diffDays === 0) {
-    if (currentMinutes > endTime) {
-      return "已结束"; // 今天且结束时间已过
-    }
-    if (currentMinutes >= startTime && currentMinutes <= endTime) {
-      return "进行中"; // 今天且进行中
-    }
-    return "预约"; // 今天且尚未开始
-  }
-  if (diffDays > 0 && diffDays <= 2) {
-    if (diffDays === 2) {
-      // 只有当前时间超过今天的中午 12 点，才可以预约后天的课程
-      if (now.value >= today12PM.value) {
-        return "预约";
-      } else {
-        return "暂未开放预约"; // 今天还没到中午 12 点，不允许预约后天课程
-      }
-    }
-    return "预约"; // 今天后的 1 天内的课程直接允许预约
-  }
-  return "暂未开放预约"; // 超过两天后的日期
+// 课程是否已满
+const isFull = computed(() => {
+  return props.confirmedCount >= (props.courseInfo?.capacity || 20);
 });
 
-// 点击事件
-const bookCourse = async () => {
-  // toISOString() 的输出示例：2024-12-17T06:55:00.000Z
-  const formattedDate = props.clickDate.toISOString(); // 转换为 ISO 格式
-  // 执行预约逻辑
-  uni.navigateTo({
-    url: `/pages-reserve/reserveDetail/reserveDetail?id=${props.classId}&date=${formattedDate}&time=${props.time}`,
-  });
-};
+// 当前用户的预约状态 confirmed waitlist
+const userReservationStatus = computed(() => {
+  const currentUserReserve = props.courseInfo.reserveRecords?.find(
+    (record) => record.user_id?.[0]?._id === userInfo.userId
+  );
+  return currentUserReserve?.status || null;
+});
+
+// 当前用户的预约状态
+const buttonStatus = computed(() => {
+  // 1. 优先判断是否已取消
+  if (props.isCourseCancelled) {
+    return "courseCancelled";
+  }
+
+  // 2. 判断用户预约状态
+  if (userReservationStatus.value === "confirmed") {
+    return "userConfirmed";
+  }
+  if (userReservationStatus.value === "waitlist") {
+    return "userWaitlist";
+  }
+
+  // 3. 判断时间状态
+  const currentMinutes = now.value.getHours() * 60 + now.value.getMinutes();
+  const diffDays = Math.floor(
+    (props.clickDate.getTime() - today.value.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffDays < 0) {
+    return "ended";
+  }
+
+  if (diffDays === 0) {
+    if (currentMinutes > endTime) {
+      return "ended";
+    }
+    if (currentMinutes >= startTime && currentMinutes <= endTime) {
+      return "ongoing";
+    }
+    return isFull.value ? "waitlistAvailable" : "reserveAvailable";
+  }
+
+  if (diffDays > 0 && diffDays <= 2) {
+    if (diffDays === 2) {
+      if (now.value >= today12PM.value) {
+        return isFull.value ? "waitlistAvailable" : "reserveAvailable";
+      } else {
+        return "notOpenYet";
+      }
+    }
+    return isFull.value ? "waitlistAvailable" : "reserveAvailable";
+  }
+
+  return "notOpenYet";
+});
+
+// 按钮文本
+const buttonText = computed(() => {
+  const textMap = {
+    courseCancelled: "已取消", // 课程取消
+    userConfirmed: "已预约",
+    userWaitlist: "候补中",
+    ended: "已结束",
+    ongoing: "进行中",
+    waitlistAvailable: "候补",
+    reserveAvailable: "预约",
+    notOpenYet: "暂未开放预约",
+  };
+  return textMap[buttonStatus.value] || "预约";
+});
+
+// 按钮样式类
+const buttonClass = computed(() => {
+  const classMap = {
+    courseCancelled: "cancelled",
+    userConfirmed: "confirmed",
+    userWaitlist: "waitlist",
+    ended: "ended",
+    ongoing: "ongoing",
+    waitlistAvailable: "waitlist-available",
+    reserveAvailable: "active",
+    notOpenYet: "not-open",
+  };
+  return classMap[buttonStatus.value] || "";
+});
 </script>
 
-<style>
+<style scoped lang="scss">
 .reserve-btn {
-  font-size: 16px;
+  font-size: 28rpx;
+  padding: 12rpx 30rpx;
   text-align: center;
-  border-radius: 20px;
+  border-radius: 50rpx;
   border: none;
+  transition: all 0.3s ease;
 }
+
+/* 已取消 */
+.reserve-btn.cancelled {
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 8rpx 16rpx rgba(255, 75, 43, 0.5);
+  cursor: not-allowed;
+}
+
+/* 已预约 */
+.reserve-btn.confirmed {
+  background-color: #4caf50;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* 候补中 */
+.reserve-btn.waitlist {
+  background-color: #ffa726;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* 已结束 */
+.reserve-btn.ended {
+  background-color: #9e9e9e;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+/* 进行中 */
+.reserve-btn.ongoing {
+  background-color: #74dbef;
+  color: #333;
+  cursor: not-allowed;
+}
+
+/* 可候补 */
+.reserve-btn.waitlist-available {
+  background-color: #0b6309;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* 可预约 */
 .reserve-btn.active {
   background-color: #ff6600;
   color: #fff;
   cursor: pointer;
 }
-.reserve-btn:disabled {
+
+/* 暂未开放 */
+.reserve-btn.not-open {
   background-color: #ddd;
-  color: #333;
-  cursor: not-allowed;
-}
-.reserve-btn.ing {
-  background-color: #74dbef !important;
-  color: #333;
+  color: #999;
   cursor: not-allowed;
 }
 </style>

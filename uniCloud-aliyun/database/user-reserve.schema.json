@@ -39,6 +39,18 @@
       "title": "是否取消预约",
       "description": "指示此预约是否已取消",
       "defaultValue": false
+    },
+    "status": {
+      "bsonType": "string",
+      "title": "预约状态",
+      "description": "预约状态：confirmed(已确认) / waitlist(候补)",
+      "enum": ["confirmed", "waitlist"],
+      "defaultValues": "confirmed"
+    },
+    "waitlist_position": {
+      "bsonType": "int",
+      "title": "候补位置",
+      "description": "如果是候补状态，记录候补顺序位置"
     }
   }
 }

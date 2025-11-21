@@ -7,17 +7,21 @@
         active:
           buttonStatus.includes('预约') && buttonStatus !== '暂未开放预约',
         ing: buttonStatus === '进行中',
+        waitlist: buttonStatus.includes('候补'),
       }"
-      :disabled="buttonStatus == '已结束' || buttonStatus == '暂未开放预约'">
+      :disabled="
+        buttonStatus == '已结束' ||
+        buttonStatus == '课程已取消' ||
+        buttonStatus == '暂未开放预约'
+      ">
       {{ buttonStatus }}
     </button>
   </view>
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch } from "vue";
+import {  computed } from "vue";
 import { parseTimeToMinutes } from "../../common/util.js";
-import { onLoad } from "@dcloudio/uni-app";
 
 const db = uniCloud.database();
 const userInfo = uni.getStorageSync("userInfo");
@@ -26,6 +30,10 @@ const props = defineProps({
   courseInfo: {
     type: Object,
     default: () => {},
+  },
+  isFull: {
+    type: Boolean,
+    default: false,
   },
 });
 
@@ -42,32 +50,39 @@ const today12PM = computed(() => {
   return date;
 });
 
-console.log("props.courseInfo----", props.courseInfo);
 // 拆分开始时间和结束时间
 const [startTime, endTime] = props.courseInfo.time
-  .split("-")
-  .map(parseTimeToMinutes);
+  ? props.courseInfo.time.split("-").map(parseTimeToMinutes)
+  : [];
 
 // 获取按钮状态
 const buttonStatus = computed(() => {
   // 检查 props.courseInfo.isoDate 是否有效
   if (!props.courseInfo.isoDate) {
-    return "加载中"; // 还没有加载到有效日期时的状态
+    return "加载中";
+  }
+  if (props.courseInfo.isCourseCancelled) {
+    return "课程已取消";
   }
 
+  console.log("props.courseInfo.isReserved", props.courseInfo);
+  // ✅ 1. 若已预约
   if (props.courseInfo.isReserved) {
     return "取消预约";
-  } else {
-    return getBtnStatusBaseDate();
   }
-});
 
-watch(
-  () => props.courseInfo.isReserved,
-  () => {
-    console.log("props.courseInfo.isReserved", props.courseInfo.isReserved);
+  if (props.courseInfo.isWaited) {
+    return "取消候补";
   }
-);
+
+  // ✅ 2. 若课程已满（isFull=true）
+  if (props.isFull) {
+    return "候补";
+  }
+
+  // ✅ 3. 默认逻辑：正常状态
+  return getBtnStatusBaseDate();
+});
 
 const getBtnStatusBaseDate = () => {
   const currentMinutes = now.value.getHours() * 60 + now.value.getMinutes(); // 当前时间分钟数
@@ -102,88 +117,106 @@ const getBtnStatusBaseDate = () => {
   return "暂未开放预约"; // 超过两天后的日期
 };
 
-// 用户预约时的校验逻辑
 const checkMembershipValidity = async () => {
   try {
     const { result } = await db
       .collection("user-membership-card")
       .where({ user_id: userInfo.userId })
-      .field("expirationDate,_id, remainingSessions")
+      .field("expirationDate,_id,remainingSessions")
       .get({ getOne: true });
 
     const cardData = result?.data || {};
-    console.log("carD", cardData);
-    const existingUserInfo = uni.getStorageSync("userInfo") || {};
+    if (!cardData._id) {
+      uni.showToast({ title: "未找到会员卡", icon: "none" });
+      return null;
+    }
 
-    // 更新缓存中的 userInfo，避免 cardId 缺失
-    uni.setStorageSync("userInfo", {
+    // 更新缓存
+    const existingUserInfo = uni.getStorageSync("userInfo") || {};
+    const updatedInfo = {
       ...existingUserInfo,
-      cardId: cardData._id || "", // 防止 _id 为 undefined
+      cardId: cardData._id,
       remainingSessions: cardData.remainingSessions,
-    });
+    };
+    uni.setStorageSync("userInfo", updatedInfo);
 
     const expirationTimestamp = new Date(
       cardData.expirationDate || 0
     ).getTime();
-    const now = Date.now();
-
-    if (now < expirationTimestamp) {
-      return true; // 会员卡有效
-    } else {
-      // 会员卡过期提示
+    if (Date.now() > expirationTimestamp) {
       uni.showToast({ title: "会员卡已过期", icon: "none" });
-      return false;
+      return null;
     }
+
+    return cardData; // ✅ 返回卡信息对象
   } catch (error) {
     console.error("校验会员卡失败", error);
     uni.showToast({ title: "校验失败，请稍后重试", icon: "none" });
-    return false;
+    return null;
   }
 };
 
 /**
  * 检查用户次卡剩余次数
- * @param {string} userId - 用户ID
- * @param {Object} db - 数据库实例
+ * @param {number} remainingSessions - 次卡剩余次数
  * @returns {Promise<boolean>} 是否有足够的剩余次数
- * @throws {Error} 用户不存在或次卡不足
  */
 async function checkRemainingSessions(remainingSessions) {
-  console.log("remainingSessions", remainingSessions);
-  // 取消预约就不要判断次数是不是为0 不然为0次就没法取消
-  if (remainingSessions <= 0 && buttonStatus.value === "预约") {
-    uni.showToast({
-      title: "卡剩余次数不足",
-    });
-    return false;
+  // “取消预约”状态不检查次数，否则为 0 次就无法取消
+  if (["预约", "候补"].includes(buttonStatus.value)) {
+    if (remainingSessions <= 0) {
+      uni.showToast({
+        title:
+          buttonStatus.value === "候补"
+            ? "卡剩余次数不足，无法候补"
+            : "卡剩余次数不足，无法预约",
+        icon: "none",
+      });
+      return false;
+    }
   }
+
   return true;
 }
 
-// 点击事件
 const bookCourse = async () => {
-  console.log("inner", userInfo);
-  if (!userInfo || (userInfo && !userInfo.mobile)) {
+  if (!userInfo?.mobile) {
     uni.navigateTo({
       url: "/pages/login/login",
     });
-  } else {
-    const { cardType, userId } = userInfo;
-    // 预约时调用
-    if (checkMembershipValidity()) {
-      if (cardType === "sessionCard") {
-        const hasSessions = await checkRemainingSessions(
-          userInfo.remainingSessions
-        );
-        if (!hasSessions) {
-          return;
-        }
-      }
-      emit("book", buttonStatus.value);
-    } else {
-      console.log("预约失败");
-    }
+    return;
   }
+
+  const currentStatus = buttonStatus.value ?? "";
+  const isCancel = ["取消预约", "取消候补"].includes(currentStatus);
+
+  // 取消预约/取消候补： 不校验会员卡
+  if (isCancel) {
+    emit("book", currentStatus);
+    return;
+  }
+
+  const { cardType, userId } = userInfo;
+  // 校验会员有效性
+  const cardData = await checkMembershipValidity();
+  if (!cardData) return;
+
+  // ✅ 若是“预约”或“候补”，都需要校验次数
+  if (["预约", "候补"].includes(currentStatus)) {
+    if (cardType === "sessionCard") {
+      const hasSessions = await checkRemainingSessions(
+        cardData.remainingSessions
+      );
+      if (!hasSessions) {
+        return;
+      }
+    }
+    // 候补或预约都 emit
+    emit("book", currentStatus);
+    return;
+  }
+
+  // 其他状态（已结束、暂未开放预约等）不操作
 };
 </script>
 
@@ -218,6 +251,10 @@ const bookCourse = async () => {
     background-color: #74dbef !important;
     color: #333;
     cursor: not-allowed;
+  }
+  .reserve-btn.waitlist {
+    background-color: #0b6309;
+    color: #fff;
   }
 }
 </style>

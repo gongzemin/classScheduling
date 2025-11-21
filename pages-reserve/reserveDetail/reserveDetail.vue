@@ -48,28 +48,34 @@
       </view>
     </view>
 
-    <view
-      class="class-info"
-      v-if="courseInfo.reservedUsers && courseInfo.reservedUsers.length">
+    <view class="class-info" v-if="confirmedCount">
       <view class="card-title">预约信息</view>
       <view class="info-item-wrapper">
         <view class="info-item">
           <text class="label">已预约人数：</text>
-          <text>
-            {{ courseInfo.reservedUsers && courseInfo.reservedUsers.length }}/{{
-              courseInfo.capacity || 20
-            }}
-          </text>
+          <text>{{ confirmedCount }}/{{ courseInfo.capacity || 20 }}</text>
         </view>
         <view class="info-item">
-          <reserve-user-list :reservedUsers="courseInfo.reservedUsers" />
+          <reserve-user-list :reservedUsers="confirmedRecords" />
         </view>
       </view>
     </view>
 
-    <!-- 已取消 badge -->
-    <view v-if="isCancelled" class="cancelled-badge animate-badge">
-      课程已取消
+    <view class="class-info" v-if="waitlistCount">
+      <view class="card-title">候补信息</view>
+      <view class="info-item-wrapper">
+        <view class="info-item">
+          <text class="label">候补人数：</text>
+          <text>{{ waitlistCount }}</text>
+        </view>
+        <view class="info-item" v-if="currentUserWaitlistPosition">
+          <text class="label text-sm">您的候补位置：</text>
+          <text class="text-sm">{{ currentUserWaitlistPosition }}</text>
+        </view>
+        <view class="info-item">
+          <reserve-user-list :reservedUsers="waitlistRecords" />
+        </view>
+      </view>
     </view>
 
     <!-- 预约按钮 -->
@@ -77,147 +83,78 @@
       class="reserve"
       :courseInfo="courseInfo"
       @book="bookCourse"
-      v-if="Object.keys(courseInfo).length && !isCancelled" />
+      :isFull="isFull"
+      />
   </view>
 </template>
 
 <script setup>
 import { ref, reactive, computed } from "vue";
 import { onReady, onLoad } from "@dcloudio/uni-app";
-import { formatCourseTime, formatDateToYYYYMMDD } from "../../common/util.js";
+import { formatDateToYYYYMMDD } from "../../common/util.js";
 import reserveButton from "../../components/reserve-courses/detail-reserve-button.vue";
 import reserveUserList from "../../components/reserve-courses/reserve-user-list.vue";
 
 const db = uniCloud.database();
-const collection = db.collection("class-schedule");
 const userInfo = uni.getStorageSync("userInfo");
 // TODO 有没有必要用ref
 const storedUserInfo = ref(uni.getStorageSync("userInfo"));
 
-const bookedCount = ref(12); // 已预约人数
-const maxCapacity = 20; // 最大人数
-const isCancelled = ref(false);
-
-const courseInfo = reactive({});
-const reserveUserArr = ref([]);
-
-const starCount = computed(() => {
-  if (courseInfo.courseLevel === "入门") {
-    return 1;
-  } else if (courseInfo.courseLevel === "基础") {
-    return 2;
-  } else if (courseInfo.courseLevel === "进阶") {
-    return 3;
-  }
+const courseInfo = reactive({
+  reserveRecords: [], // 预设数组，避免undefined
+  capacity: 20, // 预设默认容量，和isFull中的默认值保持一致
 });
 
-// const tt = [
-//   {
-//     user_id: "6763d1654b9247079917bee5",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-//   },
-//   {
-//     user_id: "67526d0789bd27450be85c4e",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-//   },
-//   {
-//     user_id: "6763d1654b9247079917bee5",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-//   },
-//   {
-//     user_id: "67526d0789bd27450be85c4e",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-//   },
-//   {
-//     user_id: "6763d1654b9247079917bee5",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-//   },
-//   {
-//     user_id: "67526d0789bd27450be85c4e",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-//   },
-//   {
-//     user_id: "6763d1654b9247079917bee5",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-//   },
-//   {
-//     user_id: "67526d0789bd27450be85c4e",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-//   },
-//   {
-//     user_id: "6763d1654b9247079917bee5",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-//   },
-//   {
-//     user_id: "67526d0789bd27450be85c4e",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-//   },
-//   {
-//     user_id: "6763d1654b9247079917bee5",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-//   },
-//   {
-//     user_id: "67526d0789bd27450be85c4e",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-//   },
-//   {
-//     user_id: "6763d1654b9247079917bee5",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-//   },
-//   {
-//     user_id: "67526d0789bd27450be85c4e",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-//   },
-//   {
-//     user_id: "6763d1654b9247079917bee5",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-//   },
-//   {
-//     user_id: "67526d0789bd27450be85c4e",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-//   },
-//   {
-//     user_id: "6763d1654b9247079917bee5",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-//   },
-//   {
-//     user_id: "67526d0789bd27450be85c4e",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-//   },
-//   {
-//     user_id: "67526d0789bd27450be85c4e",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-//   },
-//   {
-//     user_id: "6763d1654b9247079917bee5",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/v7fcx1KhN88lf4829a5f6dec30f81bffa90a7bf4bb03.jpg",
-//   },
-//   {
-//     user_id: "67526d0789bd27450be85c4e",
-//     avatar:
-//       "https://mp-6f936094-f8b1-4265-9a2d-a025837362d1.cdn.bspapp.com/avatar/vijySG3IdJP362fdb3d8f5338c0f22ae9c298e3ddedf.jpeg",
-//   },
-// ];
+// 🆕 计算当前用户的候补位置
+const currentUserWaitlistPosition = computed(() => {
+  const currentUser = courseInfo.reserveRecords?.find(
+    (item) =>
+      item.user_id?.[0]?._id === storedUserInfo.value.userId &&
+      item.status === "waitlist"
+  );
+  // console.log("currentUser---", currentUser);
+  return currentUser?.waitlist_position || null;
+});
+
+// 计算确认预约的用户
+const confirmedRecords = computed(() => {
+  // console.log(
+  //   "xxx--confirmedRecords",
+  //   props.courseInfo,
+  //   props.courseInfo.reserveRecords
+  // );
+  return (
+    courseInfo.reserveRecords?.filter(
+      (record) => record.status === "confirmed"
+    ) || []
+  );
+});
+
+// 计算候补用户
+const waitlistRecords = computed(() => {
+  return (
+    courseInfo.reserveRecords?.filter(
+      (record) => record.status === "waitlist"
+    ) || []
+  );
+});
+
+// 确认预约人数
+const confirmedCount = computed(() => confirmedRecords.value.length);
+
+// 候补人数
+const waitlistCount = computed(() => waitlistRecords.value.length);
+
+// 课程是否已满
+const isFull = computed(() => {
+  return confirmedCount.value >= (courseInfo?.capacity || 20);
+});
+
+// 难度星级
+const starCount = computed(() => {
+  const levelMap = { 入门: 1, 基础: 2, 进阶: 3 };
+  return levelMap[courseInfo.courseLevel] || 1;
+});
 
 // 设置用户头像
 
@@ -235,50 +172,61 @@ const getReserveUser = (course, targetDate) => {
     .where({
       class_id: course._id,
       canceled: false, // 增加canceled为false的条件
+      // reserve_class_date: db.command.gte(startOfDay).lte(endOfDay)
       reserve_class_date: db.command
         .gte(startOfDay)
         .and(db.command.lte(endOfDay)), // 日期范围查询})
     })
     .getTemp();
   let userTemp = db.collection("users").field("_id, avatar").getTemp();
+  //  .limit(course.capacity) 加了候补功能后就不需要限制了 不然预约满就显示不全
   return db
     .collection(reserveTemp, userTemp)
     .orderBy("reserve_time desc")
-    .limit(course.capacity)
     .get();
 };
-
 const updateUser = async () => {
-  console.log("updateUser");
   const res = await getReserveUser(courseInfo, courseInfo.isoDate); // 获取预约用户信息
   if (res.result.errCode === 0) {
-    // console.log(
-    //   "9999",
-    //   res.result.data,
-    //   props.clickDate,
-    //   typeof props.clickDate
-    // );
     if (res.result.data.length) {
-      let users = res.result.data
-        .map((item) => item.user_id.length && item.user_id)
-        .flat();
-      console.log("999999991", users);
-      courseInfo.reservedUsers = users.map((item) => item.avatar);
-      courseInfo.isReserved = users
-        .map((item) => item._id)
-        .includes(storedUserInfo.value.userId);
+      let reserveRecords = res.result.data;
+      // user_id 是个数组 每个元素是一个用户对象 有 _id 和 avatar
+      //   .map((item) => item.user_id.length && item.user_id)
+      //   .flat();
+      courseInfo.reserveRecords = reserveRecords;
+      // user是一个对象数组 是用户预约的课程信息 和 对应的用户id 然后用户id对应的是用户对象
+      // {
+      //   canceled: false
+      //   class_id: "675a5e830d2b31b8b6afd1b8"
+      //   reserve_class_date: "2025-11-16T14:05:48.229Z"
+      //   reserve_time: 1763215803191
+      //   status: "confirmed"
+      //   user_id: [{_id: "6770aa70652341f747e2130e", avatar: "https://mp-..."}]
+      // }
+      // 因为user_id是一个数组 里面永远只有一个用户对象
+      //
+      courseInfo.isReserved = reserveRecords.some(
+        (item) =>
+          item.user_id?.[0]?._id === storedUserInfo.value.userId &&
+          item.status === "confirmed"
+      );
+
+      courseInfo.isWaited = users.some(
+        (item) =>
+          item.user_id?.[0]?._id === storedUserInfo.value.userId &&
+          item.status === "waitlist"
+      );
+
+      console.log("updateUser", users, storedUserInfo.value.userId, courseInfo);
     } else {
       courseInfo.isReserved = false;
-      courseInfo.reservedUsers = [];
+      courseInfo.isWaited = false;
+      courseInfo.reserveRecords = [];
     }
   }
 };
 
-function getAvatar(item) {
-  return item.avatar || "../../static/images/defAvatar.png";
-}
-
-const reserveCourse = async () => {
+const reserveCourse = async (val) => {
   // TODO 用户第一次登录的时候没有cardId
   const { result } = await db
     .collection("user-membership-card")
@@ -288,7 +236,7 @@ const reserveCourse = async () => {
 
   const cardData = result?.data || {};
   const { userId = "", avatar = "", cardType = "" } = userInfo || {};
-  console.log("handleBook", userInfo);
+  console.log("reserveCourse---", new Date(courseInfo.isoDate));
   // 调用云对象
   // TODO 这样有个问题 如果预约了 然后更换了用户头像 这时候显示的头像是不是最新的
   uniCloud
@@ -300,6 +248,7 @@ const reserveCourse = async () => {
       cardType,
       queryClassId: courseInfo._id,
       clickDate: new Date(courseInfo.isoDate),
+      reserveType: val, // "预约" 或 "候补"
     })
     .then((res) => {
       const { code, message } = res;
@@ -307,13 +256,19 @@ const reserveCourse = async () => {
         const existingUserInfo = uni.getStorageSync("userInfo") || {};
         uni.setStorageSync("userInfo", {
           ...existingUserInfo,
-          remainingSessions: Number(existingUserInfo.remainingSessions) - 1,
+          remainingSessions:
+            res.data?.status === "confirmed" && cardType === "sessionCard"
+              ? Number(existingUserInfo.remainingSessions) - 1
+              : Number(existingUserInfo.remainingSessions) || 0,
         });
         updateUser();
         uni.$emit("refreshList", { msg: "更新列表" });
 
         // uni.navigateBack();
-        console.log("预约成功");
+        uni.showToast({
+          title: `预约成功`,
+          icon: "none",
+        });
       } else {
         throw new Error(message);
       }
@@ -321,10 +276,6 @@ const reserveCourse = async () => {
     .catch((err) => {
       console.error("预约失败", err);
     });
-};
-
-const handleBook = () => {
-  reserveCourse();
 };
 
 const handleCancel = async () => {
@@ -336,7 +287,7 @@ const handleCancel = async () => {
 
   const cardData = result?.data || {};
   const { userId, cardType } = userInfo;
-  console.log("cardId", userInfo, cardData);
+  console.log("取消", courseInfo);
   // 调用云对象取消预约逻辑
   uniCloud
     .importObject("reserve")
@@ -344,15 +295,19 @@ const handleCancel = async () => {
       userId,
       queryClassId: courseInfo._id,
       cardType,
+      clickDate: new Date(courseInfo.isoDate),
       cardId: cardData._id,
     })
     .then((res) => {
       const { code, message } = res;
       if (code === 200) {
+        uni.showToast({
+          title: `取消成功`,
+          icon: "none",
+        });
         updateUser();
         uni.$emit("refreshList", { msg: "更新列表" });
         // uni.navigateBack();
-        console.log("取消预约成功");
       } else {
         throw new Error(message);
       }
@@ -403,13 +358,12 @@ const bookCourse = async (val) => {
   //   mask: true,
   // });
   const { userId, avatar, cardType } = userInfo;
-  if (val === "预约") {
+  if (val === "预约" || val === "候补") {
     // 如果是次卡，先检查用户的剩余次数
-    handleBook();
-  } else if (val === "取消预约") {
+    reserveCourse(val);
+  } else if (val === "取消预约" || val === "取消候补") {
     // courseInfo.time = "2024/12/31 12:10";
     const canCancel = checkCourseCancellation(courseInfo.time);
-    // console.log("取消", courseInfo);
     if (canCancel) {
       handleCancel();
     }
@@ -423,14 +377,12 @@ onLoad((options) => {
     courseObj.time = `${formatDateToYYYYMMDD(new Date(courseObj.isoDate))} ${
       courseObj.time
     }`;
-    // console.log("courseObj---", courseObj);
-    isCancelled.value = courseObj.isCancelled;
+    console.log("courseObj---", courseObj);
     // 现在可以访问 courseObj.id, courseObj.date, courseObj.time 等
     Object.assign(courseInfo, courseObj);
     uni.setNavigationBarTitle({
       title: "预约",
     });
-    console.log("1110000", courseObj.isoDate, new Date(courseObj.isoDate));
   }
 });
 </script>
@@ -486,6 +438,9 @@ onLoad((options) => {
       font-size: 16px;
       border-bottom: 1px solid #f1f1f1c2;
       padding: 20rpx;
+      .text-sm {
+        font-size: 12px;
+      }
     }
     .info-item:last-child {
       border-bottom: none; /* 去掉最后一项的下划线 */
